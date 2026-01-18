@@ -1,26 +1,43 @@
+//dotenv
+require('dotenv').config({
+    path : require('path').resolve(__dirname, '../.env')
+})
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const compression = require('compression')
-//middleware
-const app_port = 8080
+const morgan = require('morgan')
+const router = require('./src/v1/routes')
+const { Cache } = require('./src/v1/databases/redis/init.ioredis')
+const Database = require('./src/v1/databases/mongodb/init.mongodb')
+const {appConfig} = require('./src/v1/configs/app.config')
+
+//middleware 
 app.use(cors())
 app.use(compression())
 app.use(express.json())
+app.use(morgan('dev'))
 
-
-//init database
 
 
 //route
-app.get("/",(req,res,next) => {
-    return res.send(JSON.stringify({"Hello" : "Thanh Tan"}))
-})
+app.use(router)
+
+process.title = "BusBookingProcess"
 
 const bootStrap = async () => {
-    app.listen(app_port,() => {
-        console.log("App running in port " + app_port)
-    })
+    try{
+        Cache.initRedis()
+        await Cache.getInstance().ping()
+
+        await Database.initDatabase()
+        app.listen(appConfig.port,() => {
+            console.log("App running in port " + appConfig.port)
+        })
+    }catch(error){
+        process.exit(1)
+    }
+
 }
 
 
