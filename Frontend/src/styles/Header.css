@@ -1,0 +1,170 @@
+/* wrapper */
+.header-wrapper {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  user-select: none;
+}
+
+/* .header-login-wrapper{
+  position: relative;
+} */
+
+.header-login{
+  position: relative;
+  margin-bottom: 10px;
+  justify-content: start !important;
+
+}
+
+.header-login-menu{
+  width: 80%;
+  display: flex;
+  justify-content: space-around;
+}
+
+/* header */
+.header {
+  width: 100%;
+  height: 70px;
+  padding: 0 20px;
+  transition: all 0.3s ease;
+
+}
+
+.header .nav-link {
+    color: white;
+}
+
+
+/* trạng thái */
+.header-transparent {
+  background: transparent;
+  color: white;
+  font-weight: bolder;
+}
+
+
+.header-white {
+  background: white;
+  color: #222;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  font-weight: bolder;
+}
+
+.header-white .nav-link {
+  color: #222;
+}
+
+/* menu */
+.header-menu {
+  display: flex;
+  gap: 16px;
+  user-select: none;
+}
+
+.header-menu a:hover{
+    cursor: pointer;
+    scale: 1.05;
+    color: blue
+}
+
+/* action */
+.header-action {
+  display: flex;
+  gap: 8px;
+}
+
+/* hamburger */
+.header-toggle {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.header-toggle:hover{
+    cursor: pointer;
+    scale: 1.05;
+    user-select: none;
+}
+
+
+/* MOBILE MENU */
+.mobile-menu {
+  background: white;
+  width: 100%;
+  padding: 16px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-menu a {
+  text-decoration: none;
+  color: #222;
+  font-weight: 500;
+  z-index: 1001;
+}
+
+.mobile-menu a:hover{
+    cursor: pointer;
+    scale: 1.005;
+}
+.mobile-action {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+  .hidden{
+    display: none !important;
+  }
+
+
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+.mobile-menu{
+    display: flex;
+}
+
+  .header {
+    width: 100%;
+  }
+
+  .header-menu,
+  .header-action {
+    display: none !important;
+  }
+
+  .header-toggle {
+    z-index: 1001;
+    display: block;
+    color: white;
+    font-weight: bolder;
+    position: fixed;
+    right: 0;
+    margin-right: 10px;
+  }
+  /* .hidden{
+    display: none !important;
+  } */
+  .black-color{
+    color : black;
+    font-weight: bolder;
+  }
+
+  .toggle-scrolle .header-wrapper{
+    color:black;
+  }
+  .toggle-scrolle .header-wrapper{
+    display: none;
+  }
+  .toggle-scrolled{
+    color: black;
+    font-weight: bolder;
+  }
+}

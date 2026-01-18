@@ -1,0 +1,38 @@
+.branch-container{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.branch-container hr {
+    width: 200px;
+    height: 3px;
+    margin: 16px auto 40px;
+    border: none;
+    background-color: #0d6efd;
+    opacity: 1;
+}
+
+.branch-address {
+    height: 100%;
+    padding: 20px;
+    border: 2px solid #0d6efd;
+    border-radius: 10px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.branch-address:hover{
+    cursor: pointer;
+    scale: 1.05;
+}
+
+.branch-address p {
+    color: #6c757d;
+    margin-bottom: 4px;
+    font-weight: normal;
+}
+
