@@ -34,6 +34,10 @@ class Cache {
         return this.instance
     }
 
+    /**
+     * 
+     * @returns {import('ioredis').Redis;}
+     */
     static getInstance = () => {
         if (!this.instance) {
             throw new Error('Cache not initialized. Call Cache.initRedis() first.')

@@ -11,6 +11,7 @@ const router = require('./src/v1/routes')
 const { Cache } = require('./src/v1/databases/redis/init.ioredis')
 const Database = require('./src/v1/databases/mongodb/init.mongodb')
 const {appConfig} = require('./src/v1/configs/app.config')
+const { handleError } = require('./src/v1/middleware')
 
 //middleware 
 app.use(cors())
@@ -22,6 +23,13 @@ app.use(morgan('dev'))
 
 //route
 app.use(router)
+
+
+//middleware
+
+
+//handler error
+app.use(handleError)
 
 process.title = "BusBookingProcess"
 
