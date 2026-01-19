@@ -13,6 +13,6 @@ jobs:
     steps:
       - name: Deploy with Docker Compose
         run: |
-          cd ~/project/BusBooking
+          cd ~/project/BusBooking/BusBooking
           git pull
           docker compose up -d --build
