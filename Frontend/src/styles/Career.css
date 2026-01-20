@@ -1,0 +1,10 @@
+.career{
+    width: 100%;
+    min-height: 20vh;
+    margin-top: 10vh;
+}
+
+.career:hover{
+    scale: 1.005;
+    cursor: pointer;
+}

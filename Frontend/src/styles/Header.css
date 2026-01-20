@@ -9,23 +9,6 @@
   user-select: none;
 }
 
-/* .header-login-wrapper{
-  position: relative;
-} */
-
-.header-login{
-  position: relative;
-  margin-bottom: 10px;
-  justify-content: start !important;
-
-}
-
-.header-login-menu{
-  width: 80%;
-  display: flex;
-  justify-content: space-around;
-}
-
 /* header */
 .header {
   width: 100%;

@@ -3,16 +3,35 @@ name: BusBooking
 on:
   push:
     branches:
-      - main
       - develop
 
 jobs:
-  deploy:
+  build:
     runs-on: self-hosted
-
     steps:
-      - name: Deploy with Docker Compose
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Docker images
         run: |
           cd ~/project/BusBooking/BusBooking
-          git pull
-          docker compose up -d --build
+          docker compose build
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Deploy containers
+        run: |
+          cd ~/project/BusBooking/BusBooking
+          docker compose up -d
+          docker ps
+  show-info:
+    needs: deploy
+    runs-on: self-hosted
+    steps:
+      - name: Show log
+        run: |
+          docker logs --tail=50 frontend || true
+          docker logs --tail=50 backend || true
+

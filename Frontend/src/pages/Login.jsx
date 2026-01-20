@@ -1,7 +1,4 @@
-import { useState } from "react";
-
 const Login = () => {
-    const [isRegister,setIsRegister] = useState(false)
     return (
         <section className="container mt-5 mb-5 pt-5 pb-5">
             <div className="container-fluid h-custom">
@@ -108,12 +105,6 @@ const Login = () => {
                         </a>
                         </p>
                     </div>
-
-                    {
-                        isRegister && <>
-
-                        </>
-                    }
                     </form>
                 </div>
                 </div>
