@@ -15,7 +15,10 @@ jobs:
       - name: Build Docker images
         run: |
           cd ~/project/BusBooking/BusBooking
+          git pull origin develop
+          docker ps
           docker compose build
+          docker ps
 
   deploy:
     needs: build
