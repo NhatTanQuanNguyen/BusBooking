@@ -41,6 +41,7 @@ const bootStrap = async () => {
         await Database.initDatabase()
         app.listen(appConfig.port,() => {
             console.log("App running in port " + appConfig.port)
+            console.log({config : process.env})
         })
     }catch(error){
         process.exit(1)
