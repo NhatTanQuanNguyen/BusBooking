@@ -1,5 +1,9 @@
 version: "3.9"
 
+networks:
+  busbooking-net:
+    external: true
+
 services:
   frontend:
     build:
