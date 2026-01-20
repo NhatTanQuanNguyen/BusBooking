@@ -35,13 +35,13 @@ process.title = "BusBookingProcess"
 
 const bootStrap = async () => {
     try{
+        console.log({config : process.env})
         Cache.initRedis()
         await Cache.getInstance().ping()
 
         await Database.initDatabase()
         app.listen(appConfig.port,() => {
             console.log("App running in port " + appConfig.port)
-            console.log({config : process.env})
         })
     }catch(error){
         process.exit(1)
