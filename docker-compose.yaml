@@ -14,6 +14,8 @@ services:
       VITE_API_BASE_URL: http://backend:8080
     depends_on:
       - backend
+    networks:
+      - busbooking-net
 
   backend:
     build:
@@ -45,4 +47,7 @@ services:
 
       # Log path inside container
       LOG_FOLDER_PATH_BE: /app/logs
+
+      networks:
+      - busbooking-net
 
