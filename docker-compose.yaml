@@ -48,6 +48,6 @@ services:
       # Log path inside container
       LOG_FOLDER_PATH_BE: /app/logs
 
-      networks:
+    networks:
       - busbooking-net
 
