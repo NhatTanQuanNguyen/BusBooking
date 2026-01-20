@@ -35,6 +35,7 @@ process.title = "BusBookingProcess"
 
 const bootStrap = async () => {
     try{
+        console.log({config : process.env})
         Cache.initRedis()
         await Cache.getInstance().ping()
 
