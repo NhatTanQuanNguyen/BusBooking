@@ -11,7 +11,7 @@ const router = require('./src/v1/routes')
 const { Cache } = require('./src/v1/databases/redis/init.ioredis')
 const Database = require('./src/v1/databases/mongodb/init.mongodb')
 const {appConfig} = require('./src/v1/configs/app.config')
-const { handleError } = require('./src/v1/middleware')
+const { handleError, generatePermission, generateRequestId } = require('./src/v1/middleware')
 
 //middleware 
 app.use(cors())
@@ -22,7 +22,10 @@ app.use(morgan('dev'))
 
 
 //route
-app.use(router)
+app.get("/v1/api",(req,res,next)=>{
+    res.send("Hello")
+})
+app.use('/v1/api',generateRequestId,router)
 
 
 //middleware
@@ -35,11 +38,12 @@ process.title = "BusBookingProcess"
 
 const bootStrap = async () => {
     try{
-        console.log({config : process.env})
         Cache.initRedis()
         await Cache.getInstance().ping()
 
         await Database.initDatabase()
+
+        // await generatePermission()
         app.listen(appConfig.port,() => {
             console.log("App running in port " + appConfig.port)
         })

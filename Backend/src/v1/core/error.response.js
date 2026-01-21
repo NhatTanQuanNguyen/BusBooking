@@ -54,7 +54,7 @@ class NotFoundError extends ErrorResponse {
     }
 }
 
-class Conflict extends ErrorResponse {
+class ConflictError extends ErrorResponse {
     constructor({ message = 'Conflict' }) {
         super({
             statusCode: 409,
@@ -67,5 +67,5 @@ module.exports = {
     UnauthorizedError,
     ForbiddenError,
     NotFoundError,
-    Conflict
+    ConflictError
 }
