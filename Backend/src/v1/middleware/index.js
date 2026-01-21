@@ -46,3 +46,6 @@ module.exports = {
     generatePermission,
     requiredPermission
 }
+
+export * from "./apiKey.middleware.js";
+export * from "./permission.middleware.js";
