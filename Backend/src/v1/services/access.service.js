@@ -17,7 +17,6 @@ class AccessService {
                 key: `user:email:${email}`
             })
         } catch (err) {
-
             user = null
         }
         if (!user) {
