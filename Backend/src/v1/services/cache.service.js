@@ -4,8 +4,15 @@ class CacheService{
     /**
      * @param {import('ioredis').Redis} cache
     */
-    get cache() {
-        return Cache.getInstance()
+    constructor() {
+        this.cache = null
+    }
+
+    get client() {
+        if (!this.cache) {
+        this.cache = Cache.getInstance()
+        }
+        return this.cache
     }
 
     async setCache({key,value}){
@@ -27,36 +34,32 @@ class CacheService{
 }
 
 
-class RedisCacheService extends CacheService{
+class RedisCacheService extends CacheService {
 
-    constructor(cache){
-        super(cache)
-        
-    }
-
-    async setCache({key,value}){
+    async setCache({ key, value }) {
         const data = typeof value === 'string'
-                    ?value
-                    : JSON.stringify(value)
-        return this.cache.set(key,data)
+        ? value
+        : JSON.stringify(value)
+
+        return this.client.set(key, data)
     }
 
-    async setCacheTTL({key,value,ttl}){
+    async setCacheTTL({ key, value, ttl }) {
         const data = typeof value === 'string'
-                    ?value
-                    : JSON.stringify(value)
-        return this.cache.set(key,data,'EX',ttl)
+        ? value
+        : JSON.stringify(value)
+
+        return this.client.set(key, data, 'EX', ttl)
     }
 
-    async getCache({key}){
-        const data = await this.cache.get(key)
+    async getCache({ key }) {
+        const data = await this.client.get(key)
         return data ? JSON.parse(data) : null
     }
 
-    async deleteCache({key}){
-        return this.cache.del(key)
+    async deleteCache({ key }) {
+        return this.client.del(key)
     }
-
 }
 
 module.exports = {
