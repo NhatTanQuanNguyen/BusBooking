@@ -61,5 +61,5 @@ class RedisCacheService extends CacheService{
 }
 
 module.exports = {
-    redisCacheService : new RedisCacheService(Cache.getInstance())
+    redisCacheService : new RedisCacheService()
 }
