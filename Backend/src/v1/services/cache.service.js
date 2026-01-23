@@ -4,8 +4,8 @@ class CacheService{
     /**
      * @param {import('ioredis').Redis} cache
     */
-    constructor(cache){
-        this.cache = cache
+    get cache() {
+        return Cache.getInstance()
     }
 
     async setCache({key,value}){
@@ -50,8 +50,7 @@ class RedisCacheService extends CacheService{
 
     async getCache({key}){
         const data = await this.cache.get(key)
-        if (!data) return null;
-        return JSON.parse(data)
+        return data ? JSON.parse(data) : null
     }
 
     async deleteCache({key}){
@@ -61,5 +60,5 @@ class RedisCacheService extends CacheService{
 }
 
 module.exports = {
-    redisCacheService : new RedisCacheService(Cache.getInstance())
+    redisCacheService : new RedisCacheService()
 }

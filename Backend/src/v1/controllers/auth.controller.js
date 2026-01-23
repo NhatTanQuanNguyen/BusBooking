@@ -1,27 +1,20 @@
 const { OK } = require('../core/success.response')
-const AccessServices = require('../services/access.service')
+const RegisterService = require('../services/register.service')
 
 class AuthController {
+  register = async (req, res, next) => {
+    try {
+      const result = await RegisterService.register(req.body)
 
-    register = async (req, res, next) => {
-        try {
-            const { email, password, fullName } = req.body
+      return new OK({
+        message: 'Register successfully',
+        data: result
+      }).send(res)
 
-            const result = await AccessServices.register({
-                email,
-                password,
-                fullName
-            })
-
-            return new OK({
-                message: 'Register successfully',
-                data: result
-            }).send(res)
-
-        } catch (error) {
-            next(error) 
-        }
+    } catch (error) {
+      next(error) 
     }
+  }
 }
 
 module.exports = new AuthController()
