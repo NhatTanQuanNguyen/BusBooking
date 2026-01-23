@@ -1,24 +1,24 @@
-import { ApiKeyModel } from "../models/repositories/index.js";
-import { hashApiKey } from "../services/apiKey.service.js";
+const crypto = require('crypto');
+const apiKeyRepo = require('../models/repositories/apiKey.repo'); 
+const { asyncHandler } = require('../helpers/handler/asyncHandler');
+const { ForbiddenError } = require('../core/error.response'); 
 
-export const apiKeyMiddleware = async (req, res, next) => {
-  const apiKey = req.headers["x-api-key"];
+const apiKey = asyncHandler(async (req, res, next) => {
+    const key = req.headers['x-api-key']?.toString();
+    if (!key) {
+        throw new ForbiddenError({ message: 'Missing API Key' });
+    }
+    
+    const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
+    
+    const objKey = await apiKeyRepo.findById(hashedKey);
 
-  if (!apiKey) {
-    return res.status(401).json({ message: "API Key required" });
-  }
+    if (!objKey) {
+        throw new ForbiddenError({ message: 'The API Key is invalid or has been blocked' });
+    }
 
-  const keyHash = hashApiKey(apiKey);
+    req.objKey = objKey;
+    return next();
+});
 
-  const keyData = await ApiKeyModel.findOne({
-    key_hash: keyHash,
-    status: "ACTIVE"
-  });
-
-  if (!keyData) {
-    return res.status(403).json({ message: "Invalid API Key" });
-  }
-
-  req.apiKey = keyData;
-  next();
-};
+module.exports = apiKey;

@@ -2,6 +2,8 @@ const {v4 : uuidv4} = require('uuid')
 const PermissionService = require('../services/Permission.service')
 const { checkPermission } = require('../core/sercurity')
 const { UnauthorizedError } = require('../core/error.response')
+const apiKey = require('./apiKey.middleware');
+const permission = require('./permission.middleware');
 
 const generateRequestId = (req,res,next) => {
     const requestId = req.requestId || uuidv4()
@@ -44,8 +46,9 @@ module.exports = {
     generateRequestId,
     handleError,
     generatePermission,
-    requiredPermission
+    requiredPermission,
+    apiKey,
+    permission
 }
 
-export * from "./apiKey.middleware.js";
-export * from "./permission.middleware.js";
+

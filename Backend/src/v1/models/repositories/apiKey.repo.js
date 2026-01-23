@@ -1,17 +1,34 @@
-import mongoose from "mongoose";
+const apiKeyModel = require('../apiKey.model');
 
-const apiKeySchema = new mongoose.Schema(
-  {
-    key_hash: { type: String, required: true, index: true },
-    service_name: { type: String },
-    permissions: { type: [String], default: [] },
-    status: {
-      type: String,
-      enum: ["ACTIVE", "REVOKED"],
-      default: "ACTIVE"
-    }
-  },
-  { timestamps: true }
-);
+class ApiKeyRepository {
+    createApiKey = async ({ key, permissions }) => {
+        return await apiKeyModel.create({
+            key,
+            permissions
+        });
+    };
 
-export default mongoose.model("ApiKey", apiKeySchema);
+    findById = async (key) => {
+        return await apiKeyModel.findOne({ 
+            key, 
+            status: true, 
+            isDeleted: false 
+        }).lean();
+    };
+
+    updateApiKey = async (key, payload) => {
+        return await apiKeyModel.findOneAndUpdate({ key }, payload, { 
+            new: true 
+        });
+    };
+
+    softDelete = async (key) => {
+        return await apiKeyModel.findOneAndUpdate(
+            { key, isDeleted: false },
+            { isDeleted: true }, 
+            { new: true }
+        );
+    };
+}
+
+module.exports = new ApiKeyRepository();

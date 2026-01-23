@@ -1,34 +1,25 @@
-import { ApiKeyModel } from "../models/repositories/index.js";
-import { generateApiKey, hashApiKey } from "../services/apiKey.service.js";
-import { SuccessResponse } from "../core/success.response.js";
+const ApiKeyService = require('../services/apiKey.service');
+const { SuccessResponse, OK } = require('../core/success.response');
 
-export const createApiKey = async (req, res) => {
-  const { service_name, permissions } = req.body;
+class ApiKeyController {
+    create = async (req, res, next) => {
+        new SuccessResponse({
+            message: 'API Key created successfully',
+            statusCode: 201,
+            data: await ApiKeyService.create({
+                permissions: req.body.permissions
+            })
+        }).send(res);
+    };
 
-  const apiKey = generateApiKey();
-  const keyHash = hashApiKey(apiKey);
+    delete = async (req, res, next) => {
+        const { key } = req.params;
+        new OK({
+            message: 'API Key deleted successfully',
+            data: await ApiKeyService.delete(key)
+        }).send(res);
 
-  await ApiKeyModel.create({
-    key_hash: keyHash,
-    service_name,
-    permissions
-  });
+    };
+}
 
-  return new SuccessResponse({
-    message: "Create API key success",
-    metadata: { apiKey }
-  }).send(res);
-};
-
-export const updateApiKey = async (req, res) => {
-  const { permissions, status } = req.body;
-
-  await ApiKeyModel.findByIdAndUpdate(req.params.id, {
-    permissions,
-    status
-  });
-
-  return new SuccessResponse({
-    message: "Update API key success"
-  }).send(res);
-};
+module.exports = new ApiKeyController();
