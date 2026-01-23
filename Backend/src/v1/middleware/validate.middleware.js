@@ -1,17 +1,25 @@
-const { validationResult } = require('express-validator')
 const { BadRequestError } = require('../core/error.response')
 
-const validateRequest = (req, res, next) => {
-  const errors = validationResult(req)
-
-  if (!errors.isEmpty()) {
-    throw new BadRequestError({
-      message: errors.array()[0].message,
-      errors: errors.array()
+const validate = (schema, property = 'body') => {
+  return (req, res, next) => {
+    const { error, value } = schema.validate(req[property], {
+      abortEarly: false,   
+      allowUnknown: false 
     })
-  }
 
-  next()
+    if (error) {
+      throw new BadRequestError({
+        message: 'Validation failed',
+        errors: error.details.map(e => ({
+          message: e.message,
+          path: e.path.join('.')
+        }))
+      })
+    }
+
+    req[property] = value
+    next()
+  }
 }
 
-module.exports = validateRequest
+module.exports = validate

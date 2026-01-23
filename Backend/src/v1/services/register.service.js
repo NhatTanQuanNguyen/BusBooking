@@ -4,37 +4,44 @@ const { RoleModel } = require('../models/role.model')
 const { BadRequestError, NotFoundError } = require('../core/error.response')
 const JwtCore = require('../core/jwt')
 const { redisCacheService } = require('./cache.service')
-
-const USER_TTL = 60 * 60
+const { logger } = require('../helpers/logger/myLogger')
 
 class RegisterService {
   static register = async ({ email, password, fullName }) => {
 
-    // Check email exists
+    logger.info('Register start', null, { email })
+
+    // Check email in cache
+    const emailKey = `user:email:${email}`
+    const emailCached = await redisCacheService.getCache({ key: emailKey })
+
+    if (emailCached) {
+      logger.info('Register blocked by cache', null, { email })
+      throw new BadRequestError({ message: 'Email already registered' })
+    }
+
+    // Check DB
     const existingUser = await UserModel.findOne({
       user_email: email,
       isDeleted: false
     })
 
     if (existingUser) {
-      throw new BadRequestError({
-        message: 'Email already registered'
+      await redisCacheService.setCache({
+        key: emailKey,
+        value: 1
       })
+
+      logger.info('Register blocked by DB', null, { email })
+      throw new BadRequestError({ message: 'Email already registered' })
     }
+
 
     // Get default role
     const userRole = await RoleModel.findOne({ role_name: 'user' })
     if (!userRole) {
-      throw new NotFoundError({
-        message: 'Default user role not found'
-      })
-    }
-
-
-    if (!userRole) {
-      throw new NotFoundError({
-        message: 'Default user role not found'
-      })
+      logger.error('Default role not found')
+      throw new NotFoundError({ message: 'Default user role not found' })
     }
 
     // Hash password
@@ -58,17 +65,18 @@ class RegisterService {
 
     // Save cache
     await Promise.all([
-      redisCacheService.setCacheTTL({
-        key: `user:id:${cacheUser.id}`,
-        value: cacheUser,
-        ttl: USER_TTL
+      redisCacheService.setCache({
+        key: `user:email:${email}`,
+        value: 1
       }),
-      redisCacheService.setCacheTTL({
-        key: `user:email:${cacheUser.email}`,
-        value: cacheUser,
-        ttl: USER_TTL
+      
+      redisCacheService.setCache({
+        key: `user:id:${cacheUser.id}`,
+        value: cacheUser
       })
     ])
+
+    logger.info('Register success', null, { userId: cacheUser.id })
 
     // Generate token
     const accessToken = JwtCore.generateAccessToken({
