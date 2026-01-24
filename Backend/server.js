@@ -38,13 +38,13 @@ process.title = "BusBookingProcess"
 
 const bootStrap = async () => {
     try{
-        Cache.initRedis()
+        await Cache.initRedis()
         await Cache.getInstance().ping()
 
         await Database.initDatabase()
 
         // await generatePermission()
-        app.listen(appConfig.port,() => {
+        app.listen(appConfig.port,'0.0.0.0', () => {
             console.log("App running in port " + appConfig.port)
         })
     }catch(error){

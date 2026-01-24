@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
 })
 
 userSchema.index(
-    { email: 1 },
+    { user_email: 1 },
     { unique: true, partialFilterExpression: { isDeleted: false } }
 )
 
