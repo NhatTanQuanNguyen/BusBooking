@@ -1,15 +1,15 @@
-const apiKeyModel = require('../apiKey.model');
+const { ApiKeyModel } = require('../apiKey.model');
 
 class ApiKeyRepository {
     createApiKey = async ({ key, permissions }) => {
-        return await apiKeyModel.create({
+        return await ApiKeyModel.create({
             key,
             permissions
         });
     };
 
     findById = async (key) => {
-        return await apiKeyModel.findOne({ 
+        return await ApiKeyModel.findOne({ 
             key, 
             status: true, 
             isDeleted: false 
@@ -17,13 +17,13 @@ class ApiKeyRepository {
     };
 
     updateApiKey = async (key, payload) => {
-        return await apiKeyModel.findOneAndUpdate({ key }, payload, { 
+        return await ApiKeyModel.findOneAndUpdate({ key }, payload, { 
             new: true 
         });
     };
 
     softDelete = async (key) => {
-        return await apiKeyModel.findOneAndUpdate(
+        return await ApiKeyModel.findOneAndUpdate(
             { key, isDeleted: false },
             { isDeleted: true }, 
             { new: true }

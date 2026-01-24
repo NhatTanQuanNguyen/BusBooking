@@ -19,7 +19,7 @@ const apiKeySchema = new Schema({
     permissions: {
         type: [String],
         required: true,
-        enum: Object.values(PERMISSIONS), 
+        enum: Object.values(apiKey_permissions), 
     },
     isDeleted: {
         type: Boolean,
