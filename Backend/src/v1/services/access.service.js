@@ -3,22 +3,31 @@ const UserRepository = require('../models/repositories/user.repo')
 const { BadRequestError, UnauthorizedError } = require('../core/error.response')
 const { comparePasswordHash } = require('../core/sercurity')
 const { redisCacheService } = require('./cache.service')
-const { JWT_SECRET, JWT_EXPIRES_IN } = require('../security/jwt.security')
+const { jwtConfig } = require('../configs/jwt.config')
+const { logger } = require('../helpers/logger/myLogger')
 
 class AccessService {
     constructor(userRepository) {
         this.userRepository = userRepository
     }
-    login = async ({ email, password }) => {
 
+    login = async ({ email, password, requestId }) => {
         let user = null
+
+        /** 1️⃣ Try cache */
         try {
             user = await redisCacheService.getCache({
                 key: `user:email:${email}`
             })
         } catch (err) {
-            user = null
+            logger.error('REDIS_GET_CACHE_ERROR', {
+                requestId,
+                file: 'access.service.js',
+                error: err.message
+            })
         }
+
+        /** 2️⃣ Cache miss → DB */
         if (!user) {
             user = await this.userRepository.findByEmail({ email })
 
@@ -38,6 +47,7 @@ class AccessService {
             }
         }
 
+        /** 3️⃣ Check password */
         const isMatch = await comparePasswordHash({
             password,
             hashPassword: user.user_password
@@ -49,18 +59,17 @@ class AccessService {
             })
         }
 
+        /** 4️⃣ Sign JWT */
         const payload = {
             userId: user._id,
             role: user.user_role
         }
 
-        const accessToken = jwt.sign(payload, JWT_SECRET, {
-            expiresIn: JWT_EXPIRES_IN
+        const accessToken = jwt.sign(payload, jwtConfig.secret, {
+            expiresIn: jwtConfig.expiresIn
         })
 
-        return {
-            accessToken
-        }
+        return { accessToken }
     }
 }
 

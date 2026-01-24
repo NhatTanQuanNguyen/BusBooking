@@ -4,16 +4,33 @@ const { logger } = require('../helpers/logger/myLogger')
 
 class AccessController {
     login = async (req, res, next) => {
-        logger.info('LOGIN_REQUEST', {
-            email: req.body.email,
-            ip: req.ip
-        })
+        try {
+            logger.info('LOGIN_REQUEST', {
+                requestId: req.requestId,
+                email: req.body.email,
+                ip: req.ip
+            })
 
-        return new OK({
-            message: 'Login success',
-            data: await AccessService.login(req.body)
-        }).send(res)
+            const result = await AccessService.login({
+                email: req.body.email,
+                password: req.body.password,
+                requestId: req.requestId
+            })
+
+            return new OK({
+                message: 'Login success',
+                data: result
+            }).send(res)
+
+        } catch (error) {
+            logger.error('LOGIN_FAILED', {
+                requestId: req.requestId,
+                error: error.message
+            })
+            next(error)
+        }
     }
 }
+
 
 module.exports = new AccessController()
