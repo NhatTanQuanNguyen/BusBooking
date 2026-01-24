@@ -5,15 +5,13 @@ const { BadRequestError, NotFoundError } = require('../core/error.response')
 const JwtCore = require('../core/jwt')
 const { redisCacheService } = require('./cache.service')
 const { logger } = require('../helpers/logger/myLogger')
-const { validate } = require('../helpers/validate/validate')
-const RegisterSchema = require('../routes/auth/register.validate')
 
 const FILE_NAME = 'register.service.js'
 const FUNCTION_NAME = 'RegisterService.register'
 
 class RegisterService {
   static register = async (payload, requestId) => {
-    const { email, password, fullName } = validate(RegisterSchema, payload)
+    const { email, password, fullName } = payload
 
     logger.info('Register start', requestId, {
       file: FILE_NAME,
@@ -50,7 +48,7 @@ class RegisterService {
         email,
         error: err.message
       })
-      throw error 
+      throw new BadRequestError({message: 'Cannot check email at the moment'}) 
     }
 
     if (existingUser) {
@@ -81,7 +79,7 @@ class RegisterService {
         step: 'GET_DEFAULT_ROLE',
         error: err.message
       })
-      throw error
+      throw new BadRequestError({message: 'Cannot get user role'})
     }
 
     if (!userRole) {
@@ -114,7 +112,7 @@ class RegisterService {
         email,
         error: err.message
       })
-      throw error
+      throw new BadRequestError({message: 'Cannot create user'})
     }
     
     // Format data
