@@ -3,13 +3,8 @@ const router = express.Router()
 
 
 const AuthController = require('../../controllers/auth.controller')
-const RegisterValidate = require('./register.validate')
-const validate = require('../../middleware/validate.middleware')
+const { asyncHandler } = require('../../helpers/handler/asyncHandler')
 
-router.post(
-  '/register',
-  validate(RegisterValidate),
-  AuthController.register
-)
+router.post('/register', asyncHandler(AuthController.register))
 
 module.exports = router

@@ -1,17 +1,16 @@
 const { OK } = require('../core/success.response')
 const RegisterService = require('../services/register.service')
 const { logger } = require('../helpers/logger/myLogger')
-const { asyncHandler } = require('../helpers/handler/asyncHandler')
 
 class AuthController {
-  register = asyncHandler(async (req, res) => {
+  register = async (req, res) => {
     logger.info(
       '[AUTH][REGISTER] Request',
       req.requestId,
-      { body: req.body }
+      { email: req.body.email }
     )
 
-    const result = await RegisterService.register(req.body)
+    const result = await RegisterService.register(req.body, req.requestId)
 
     logger.info(
       '[AUTH][REGISTER] Success',
@@ -23,7 +22,7 @@ class AuthController {
       message: 'Register successfully',
       data: result
     }).send(res)
-  })
+  }
 }
 
 module.exports = new AuthController()
