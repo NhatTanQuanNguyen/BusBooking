@@ -33,7 +33,22 @@ class OK extends SuccessResponse {
     }
 }
 
+class CREATED extends SuccessResponse {
+    constructor({
+        message = 'Created',
+        data = null,
+        meta = null
+    }){
+        super({
+            statusCode: 201, 
+            message,
+            data,
+            meta
+        })
+    }
+}
+
 module.exports = {
-    SuccessResponse,
-    OK
+    OK,
+    CREATED
 }

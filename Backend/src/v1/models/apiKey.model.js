@@ -1,5 +1,11 @@
 const { Schema, model } = require('mongoose');
 
+const apiKey_permissions = {
+    BASIC: '0000',
+    ADMIN: '1111',
+    PARTNER: '2222'
+};
+
 const apiKeySchema = new Schema({
     key: {
         type: String,
@@ -13,7 +19,7 @@ const apiKeySchema = new Schema({
     permissions: {
         type: [String],
         required: true,
-        enum: ['0000', '1111', '2222'], 
+        enum: Object.values(PERMISSIONS), 
     },
     isDeleted: {
         type: Boolean,
@@ -25,4 +31,9 @@ const apiKeySchema = new Schema({
     collection: 'ApiKeys'
 });
 
-module.exports = model('ApiKey', apiKeySchema);
+const ApiKeyModel = model('ApiKey', apiKeySchema);
+
+module.exports = {
+    ApiKeyModel,
+    apiKey_permissions
+};

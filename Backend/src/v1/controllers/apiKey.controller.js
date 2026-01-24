@@ -1,24 +1,25 @@
 const ApiKeyService = require('../services/apiKey.service');
-const { SuccessResponse, OK } = require('../core/success.response');
+const { CREATED, OK } = require('../core/success.response');
 
 class ApiKeyController {
     create = async (req, res, next) => {
-        new SuccessResponse({
-            message: 'API Key created successfully',
-            statusCode: 201,
-            data: await ApiKeyService.create({
-                permissions: req.body.permissions
-            })
-        }).send(res);
-    };
+    const requestId = req.headers['x-request-id'] || 'unknown-id'; 
+    return new CREATED({
+        message: 'API Key created successfully',
+        data: await ApiKeyService.create({  
+            permissions: req.body.permissions,
+            requestId 
+        })
+    }).send(res);
+};
 
     delete = async (req, res, next) => {
         const { key } = req.params;
-        new OK({
+        const requestId = req.headers['x-request-id'] || 'unknown-id'; 
+        return new OK({
             message: 'API Key deleted successfully',
-            data: await ApiKeyService.delete(key)
+            data: await ApiKeyService.delete(key, requestId) 
         }).send(res);
-
     };
 }
 
