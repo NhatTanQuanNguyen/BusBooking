@@ -14,20 +14,13 @@ class AccessService {
     login = async ({ email, password, requestId }) => {
         let user = null
 
-        /** 1️⃣ Try cache */
         try {
             user = await redisCacheService.getCache({
                 key: `user:email:${email}`
             })
         } catch (err) {
-            logger.error('REDIS_GET_CACHE_ERROR', {
-                requestId,
-                file: 'access.service.js',
-                error: err.message
-            })
         }
 
-        /** 2️⃣ Cache miss → DB */
         if (!user) {
             user = await this.userRepository.findByEmail({ email })
 
@@ -47,7 +40,6 @@ class AccessService {
             }
         }
 
-        /** 3️⃣ Check password */
         const isMatch = await comparePasswordHash({
             password,
             hashPassword: user.user_password
@@ -59,7 +51,7 @@ class AccessService {
             })
         }
 
-        /** 4️⃣ Sign JWT */
+
         const payload = {
             userId: user._id,
             role: user.user_role

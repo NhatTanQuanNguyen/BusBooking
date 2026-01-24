@@ -1,9 +1,10 @@
 const { OK } = require('../core/success.response')
 const AccessService = require('../services/access.service')
 const { logger } = require('../helpers/logger/myLogger')
+const { UnauthorizedError } = require('../core/error.response')
 
 class AccessController {
-    login = async (req, res, next) => {
+    login = async (req, res) => {
         try {
             logger.info('LOGIN_REQUEST', {
                 requestId: req.requestId,
@@ -27,10 +28,12 @@ class AccessController {
                 requestId: req.requestId,
                 error: error.message
             })
-            next(error)
+
+            throw new UnauthorizedError({
+                message: 'email or password is incorrect'
+            })
         }
     }
 }
-
 
 module.exports = new AccessController()
