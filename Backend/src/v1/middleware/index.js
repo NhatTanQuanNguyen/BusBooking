@@ -2,6 +2,7 @@ const {v4 : uuidv4} = require('uuid')
 const PermissionService = require('../services/Permission.service')
 const { checkPermission } = require('../core/sercurity')
 const { UnauthorizedError } = require('../core/error.response')
+const { logger } = require('../helpers/logger/myLogger')
 
 const generateRequestId = (req,res,next) => {
     const requestId = req.requestId || uuidv4()
@@ -11,12 +12,26 @@ const generateRequestId = (req,res,next) => {
     next()
 }
 
-const handleError = (err,req,res,next) => {
+const handleError = (err, req, res, next) => {
     const statusCode = err.statusCode || 500
+    const requestId = req.requestId
 
+    // LOG CHI TIẾT (CHO DEV)
+    logger.error('Unhandled error', {
+        requestId,
+        statusCode,
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+        method: req.method,
+        path: req.originalUrl
+    })
+
+    // RESPONSE GỌN (CHO CLIENT)
     res.status(statusCode).json({
         status: 'error',
-        message: err.message || 'Internal Server Error'
+        message: err.message || 'Internal Server Error',
+        requestId
     })
 }
 

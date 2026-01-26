@@ -39,6 +39,7 @@ process.title = "BusBookingProcess"
 const bootStrap = async () => {
     try{
         Cache.initRedis()
+        
         await Cache.getInstance().ping()
 
         await Database.initDatabase()

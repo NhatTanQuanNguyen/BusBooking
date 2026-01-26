@@ -11,7 +11,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         lowercase: true,
-        trim: true
+        trim: true,
+        unique : true,
+        index : true
     },
     user_password : {
         type: String,
@@ -21,6 +23,9 @@ const userSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         required : true,
         ref : 'role'
+    },
+    user_keyToken : {
+        type : String
     },
     isDeleted : {
         type : Boolean,
@@ -32,10 +37,6 @@ const userSchema = new mongoose.Schema({
     collection : COLLECTION_NAME
 })
 
-userSchema.index(
-    { email: 1 },
-    { unique: true, partialFilterExpression: { isDeleted: false } }
-)
 
 module.exports = {
     UserModel : mongoose.model(DOCUMENT_NAME,userSchema)

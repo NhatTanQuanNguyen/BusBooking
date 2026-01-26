@@ -62,10 +62,22 @@ class ConflictError extends ErrorResponse {
         })
     }
 }
+
+class InternalServerError extends ErrorResponse {
+    constructor({ message = 'Internal Server Error', errors = null } = {}) {
+        super({
+            statusCode: 500,
+            message,
+            errors
+        })
+    }
+}
+
 module.exports = {
     BadRequestError,
     UnauthorizedError,
     ForbiddenError,
     NotFoundError,
-    ConflictError
+    ConflictError,
+    InternalServerError
 }

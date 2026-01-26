@@ -16,6 +16,9 @@ const checkPermission = (userPermissions = [], requiredPermission) => {
     return userPermissions.includes(requiredPermission)
 }
 
+
+
+
 module.exports = {
     hashPassword,
     comparePasswordHash,
