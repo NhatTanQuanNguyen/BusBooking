@@ -4,6 +4,11 @@ const DOCUMENT_NAME = 'apikey'
 const COLLECTION_NAME = 'apikeys'
 
 const apiKeySchema = new mongoose.Schema({
+    company_id : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'bus_company',
+        required : true
+    },
     key : {
         type : String,
         unique :  true

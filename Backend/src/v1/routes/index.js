@@ -3,6 +3,8 @@ const { generateApiKey } = require('../controllers/api.key.controller');
 const { asyncHandler } = require('../helpers/handler/asyncHandler');
 
 const router = require('express').Router()
+
+router.use("/bus-company",require("./bus-company/index"))
 router.post("/apikey/generate",generateApiKey)
 
 router.use(asyncHandler(checkApiKey({
