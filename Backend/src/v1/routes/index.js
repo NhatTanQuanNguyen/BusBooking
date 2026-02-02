@@ -11,5 +11,7 @@ router.use(asyncHandler(checkApiKey({
 
 router.use("/role",require("./role/index"))
 router.use("/auth",require("./auth/index"))
+router.use("/route",require("./route/index"))
+router.use("/location",require("./location/index"))
 
 module.exports = router;
