@@ -1,23 +1,18 @@
 const { BusCompanyService }= require('../services/bus.company.service');
 const { OK } = require("../core/success.response");
 const { logger } = require('../helpers/logger/myLogger');
-const { BadRequestError } = require('../core/error.response');
 
 class BusCompanyController {
     registerBusCompany = async (req, res, next) => {
-        logger.info('Bus company registration request received', { 
-            body: req.body 
+        const requestId = req.requestId
+        logger.info('Bus company register start', { 
+            requestId,
+            body: req.body
         })
 
-        const data = await BusCompanyService.registerBusCompany(req.body)
+        const data = await BusCompanyService.registerBusCompany(req.body, { requestId })
 
-        if (!data) {
-            logger.error('Bus company registration failed', { 
-                body: req.body 
-            });
-            
-            throw new Error('Bus company registration failed');
-        }
+        logger.info('Bus company register done', { requestId })
 
         return new OK({
             message: 'Bus company registered successfully',
@@ -26,24 +21,14 @@ class BusCompanyController {
     }
 
     subscribePlan = async (req, res, next) => {
-        const {company_id, plan_name} = req.body;
-        if (!company_id || !plan_name) {
-            throw new BadRequestError({ message: 'Missing company_id or plan_name' });
-        }
+        const requestId = req.requestId
+        const { company_id, plan_name } = req.body;
 
-        logger.info('Bus company subscription request received', { 
-            company_id, 
-            plan_name 
-        })
+        logger.info('Bus company subscribe start', { requestId, company_id, plan_name })
         
-        const data = await BusCompanyService.subscribePlan({ company_id, plan_name: plan_name });
-        if (!data) {
-            logger.error('Bus company subscription failed', { 
-                company_id, 
-                plan_name 
-            });
-            throw new BadRequestError({ message: 'Bus company subscription failed' });
-        }
+        const data = await BusCompanyService.subscribePlan({ company_id, plan_name }, { requestId });
+        
+        logger.info('Bus company subscribe done', { requestId })
 
         return new OK({
             message: 'Bus company subscribed to plan successfully',
@@ -52,30 +37,15 @@ class BusCompanyController {
     }
 
     updateProfile = async (req, res, next) => {
-        const company_id = req.params?.company_id || req.body?.company_id || req.query?.company_id;
+        const requestId = req.requestId
+        const payload = req.body
+        const company_id = req.params?.company_id || payload?.company_id
 
-        if (!company_id) {
-            throw new BadRequestError({ message: 'Missing company_id' });
-        }
+        logger.info('Bus company update start', { requestId, company_id })
 
-        logger.info('Bus company update request received', { 
-            company_id,
-            body: req.body 
-        })
-
-        const data = await BusCompanyService.updateCompany({
-            company_id,
-            payload: req.body
-        });
+        const data = await BusCompanyService.updateCompany({ company_id, payload }, { requestId });
         
-        if (!data) {
-            logger.error('Bus company update failed', { 
-                company_id, 
-                payload: req.body 
-            });
-
-            throw new BadRequestError({ message: 'Bus company update failed' });
-        }
+        logger.info('Bus company update done', { requestId })
 
         return new OK({
             message: 'Bus company updated successfully',

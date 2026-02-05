@@ -5,7 +5,7 @@ const { asyncHandler } = require('../helpers/handler/asyncHandler');
 const router = require('express').Router()
 
 router.use("/bus-company",require("./bus-company/index"))
-router.post("/apikey/generate",generateApiKey)
+router.use("/apikey",require("./api-key/index"))
 
 router.use(asyncHandler(checkApiKey({
     permission : "0000"

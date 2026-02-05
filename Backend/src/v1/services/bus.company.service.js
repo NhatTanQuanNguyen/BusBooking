@@ -3,56 +3,36 @@ const { logger } = require('../helpers/logger/myLogger')
 const { getInfoData } = require('../utils/index')
 const busCompanyRepo = require('../models/repositories/bus.company.repo')
 const { SubscriptionPlanModel } = require('../models/subscription.plan.model')
+const { redisCacheService } = require('./cache.service')
 
 class BusCompanyService {
-    registerBusCompany = async ({brand_name, legal_entity, service_config, settings}) => {
-        if (!brand_name || !service_config?.subdomain) {
-            logger.warn('Missing required fields for bus company registration', { 
-                brand_name, 
-                service_config 
-            })
-            throw new BadRequestError({ message: 'Missing required fields' })
-        }
+    registerBusCompany = async ({ brand_name, legal_entity }, { requestId }) => {
+        logger.info('Bus company register start', { brand_name, requestId }) 
 
-        logger.info('Registering new bus company', { 
-            brand_name 
-        })
-
-        const { subdomain } = service_config;
-        const existed = await busCompanyRepo.findBySubdomain(subdomain);
+        const existed = await busCompanyRepo.findByBrandName(brand_name);
         if (existed) {
-            logger.warn('Subdomain already exists', { 
-                subdomain 
-            })
-
-            throw new BadRequestError({ message: 'Subdomain already exists' });
-        }   
+            throw new BadRequestError({ message: 'Bus company already exists' });
+        }
 
         const newBusCompany = await busCompanyRepo.createBusCompany({
             brand_name,
-            legal_entity,
-            service_config,
-            settings
+            legal_entity
         });
 
-        if (!newBusCompany) {
-            logger.error('Bus company registration failed', { 
-                brand_name 
-            })
-
-            throw new BadRequestError({ message: 'Bus company registration failed' })
-        }
-
         return {
-            company: getInfoData(['_id', 'brand_name', 'service_config'], newBusCompany),
+            company: getInfoData(['_id', 'brand_name'], newBusCompany),
         }
     }
 
-    subscribePlan = async ({ company_id, plan_name }) => {
+    subscribePlan = async ({ company_id, plan_name }, { requestId }) => {
+        logger.info('Bus company subscribe start', { company_id, plan_name, requestId })
+
         const plan = await SubscriptionPlanModel.findOne({ plan_name })
         if (!plan) {
             throw new NotFoundError({ message: 'Subscription plan not found' })
         }
+
+        logger.info('Subscription plan found', { plan_name, requestId })
 
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + plan.duration_days)
@@ -60,7 +40,6 @@ class BusCompanyService {
         const updateData = {
             subscription: {
                 plan_name: plan.plan_name,
-                status: 'active',
                 expires_at: expiresAt,
                 quotas: {
                     ...plan.quotas,
@@ -72,21 +51,24 @@ class BusCompanyService {
         return await this.updateCompany({ 
             company_id, 
             payload: updateData 
-        })
+        }, { requestId })
     }
 
-    updateCompany = async ({ company_id, payload }) => {
-        const existedCompany = await busCompanyRepo.findById(company_id);
+    updateCompany = async ({ company_id, payload }, { requestId }) => {
+        logger.info('Bus company update start', { company_id, requestId })
+
+        const existedCompany = await busCompanyRepo.findById(company_id)
+
         if (!existedCompany) {
-            throw new NotFoundError({ message: 'Bus company not found' });
+            throw new NotFoundError({ message: 'Bus company not found' })
         }
+
+        logger.info('Bus company found', { company_id, requestId })
         
         const updateData = getInfoData([
             'brand_name', 
             'legal_entity', 
-            'service_config', 
-            'subscription',
-            'settings'
+            'subscription'
         ], payload)
 
         const updatedCompany = await busCompanyRepo.updateBusCompany({
@@ -98,27 +80,65 @@ class BusCompanyService {
             throw new NotFoundError({ message: 'Bus company not found' })
         }
         
+        logger.info('Bus company update done', { company_id, requestId })
+
         return updatedCompany
     }
 
-    checkQuota = async ({ company_id }) => {
-        const company = await busCompanyRepo.findById(company_id)
-        if (!company) {
-            throw new NotFoundError({ message: 'Bus company not found' })
+    checkQuota = async ({ company_id }, { requestId }) => {
+        logger.info('Bus company quota check', { company_id, requestId })
+
+        const cacheKey = `company:quota:${company_id}`
+        let quota = await redisCacheService.getCache({ key: cacheKey })
+
+        if (!quota) {
+            const company = await busCompanyRepo.findById(company_id)
+            if (!company) throw new NotFoundError({ message: 'Bus company not found' })
+
+            const { subscription } = company
+            if (!subscription?.quotas) {
+                throw new BadRequestError({ message: 'Subscription plan not found for company' })
+            }
+
+            quota = {
+                expires_at: subscription.expires_at,
+                api_calls_per_month: subscription.quotas.api_calls_per_month,
+                current_month_usage: subscription.quotas.current_month_usage || 0
+            }
+
+            await redisCacheService.setCacheTTL({
+                key: cacheKey,
+                value: quota,
+                ttl: 60
+            })
         }
 
-        const { api_calls_per_month, current_month_usage } = company.subscription.quotas
-
-        const remainingQuota = api_calls_per_month - current_month_usage
-        if (remainingQuota <= 0) {
-            throw new BadRequestError({ message: 'API call quota exceeded' })
+        if (quota.expires_at && new Date(quota.expires_at) <= new Date()) {
+            throw new BadRequestError({ message: 'Subscription plan expired' })
         }
+
+        const limit = quota.api_calls_per_month 
+        const used = quota.current_month_usage
+
+        if (!limit || used >= limit) {
+            throw new BadRequestError({ message: 'Quota exceeded' })
+        }
+
+        const updatedUsage = used + 1
+        await busCompanyRepo.incrementMonthlyUsage(company_id)
+
+        await redisCacheService.setCacheTTL({
+            key: cacheKey,
+            value: { ...quota, current_month_usage: updatedUsage },
+            ttl: 60
+        })
 
         return {
-            allowed: remainingQuota > 0,
-            remaining: Math.max(0, remainingQuota),
-            limit: api_calls_per_month,
-            usage: current_month_usage
+            allowed: true,
+            limit,
+            used: updatedUsage,
+            remaining: limit - updatedUsage,
+            expires_at: quota.expires_at
         }
     }
 }

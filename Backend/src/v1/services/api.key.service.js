@@ -1,8 +1,12 @@
 const {BadRequestError, ForbiddenError} = require('../core/error.response')
 const crypto = require('node:crypto')
 const { ApiKeyModel } = require('../models/apikey.model')
+const { logger } = require('../helpers/logger/myLogger')
+
 class ApiKeyServices{
-    generate = async ({ company_id, permission = '0000' }) => {
+    generate = async ({ company_id, permission = '0000' }, { requestId }) => {
+        logger.info('Generating API key', { company_id, permission, requestId })
+
         const key = crypto.randomBytes(32).toString('hex')
 
         const apiKey = await ApiKeyModel.create({

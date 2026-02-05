@@ -1,21 +1,30 @@
 const { BusCompanyModel } = require('../bus.company.model');
 
 class BusCompanyRepository {
-    async createBusCompany({brand_name, legal_entity, service_config, subscription, settings}) {
+    async createBusCompany({brand_name, legal_entity}) {
         return await BusCompanyModel.create({
             brand_name,
-            legal_entity,
-            service_config,
-            subscription,
-            settings
+            legal_entity
         });
     }
 
     async updateBusCompany({ companyId, updateData }) {
+        const setData = { ...updateData }
+        if (setData.legal_entity && typeof setData.legal_entity === 'object') {
+            const legalEntity = setData.legal_entity
+            delete setData.legal_entity
+
+            Object.keys(legalEntity).forEach((key) => {
+                if (legalEntity[key] !== undefined) {
+                    setData[`legal_entity.${key}`] = legalEntity[key]
+                }
+            })
+        }
+
         return await BusCompanyModel.findByIdAndUpdate(
             companyId,
             { 
-                $set: updateData 
+                $set: setData 
             },
             { 
                 new: true,           
@@ -29,11 +38,10 @@ class BusCompanyRepository {
         return await BusCompanyModel.findById(id).lean();
     }
 
-    async findBySubdomain(subdomain) {
-        return await BusCompanyModel.findOne({ 
-            "service_config.subdomain": subdomain 
-        }).lean();
+    async findByBrandName(brand_name) {
+        return await BusCompanyModel.findOne({ brand_name }).lean();
     }
+
 
     async incrementMonthlyUsage(companyId) {
         return await BusCompanyModel.findByIdAndUpdate(companyId, {

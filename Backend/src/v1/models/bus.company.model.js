@@ -15,29 +15,8 @@ const busCompanySchema = new mongoose.Schema({
         address: String,
         tax_code: String
     },
-    service_config: {
-        subdomain: {
-            type: String,
-            unique: true,
-            required: true
-        },
-        api_status: {
-            type: String,
-            enum: ['enabled', 'disabled', 'revoked'],
-            default: 'enabled'
-        },
-        webhook_url: String
-    },
     subscription: {
-        plan_name: {
-            type: String,
-            enum: ['basic', 'pro', 'enterprise'], 
-        },
-        status: {
-            type: String,
-            enum: ['active', 'past_due', 'trialing', 'suspended'],
-            default: 'active'
-        },
+        plan_name: String, 
         expires_at: Date,
         quotas: {
             max_buses: Number,
@@ -49,12 +28,6 @@ const busCompanySchema = new mongoose.Schema({
             }
         }
     },
-    settings: {
-        timezone: String,
-        currency: String,
-        supported_bus_types: [String],
-        features_enabled: [String],     
-    }
 },{
     timestamps : true,
     collection : COLLECTION_NAME
