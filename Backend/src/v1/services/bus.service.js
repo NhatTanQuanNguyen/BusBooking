@@ -1,52 +1,38 @@
-// services/bus.service.js
 const { BadRequestError, NotFoundError } = require("../core/error.response");
 const BusRepository = require("../models/repositories/bus.repo");
-const { logger } = require("../helpers/logger/myLogger");
 
 class BusService {
-  // ================= CREATE =================
-  async createBus(payload, requestId) {
-    logger.info("Create bus started", { requestId });
-
-    const existed = await BusRepository.findByLicense({
-      license: payload.license,
+  async createBus({ payload, requestId }) {
+    const existed = await BusRepository.findByBusId({
+      busId: payload.busId,
     });
 
     if (existed) {
       throw new BadRequestError({
-        message: "Bus license already exists",
+        message: "Bus already exists",
       });
     }
 
     const bus = await BusRepository.create(payload);
-
-    logger.info("Create bus success", {
-      requestId,
-      busId: bus.busId,
-    });
-
     return bus;
   }
 
-  // ================= GET ONE =================
-  async getBusById(busId, requestId) {
-    logger.info("Get bus by id", { requestId, busId });
-
+  async getBusById({ busId, requestId }) {
     const bus = await BusRepository.findByBusId({ busId });
+
     if (!bus) {
-      throw new NotFoundError({ message: "Bus not found" });
+      throw new NotFoundError({
+        message: "Bus not found",
+      });
     }
 
     return bus;
   }
 
-  // ================= GET LIST =================
-  async getAllBuses(filters, page, limit, requestId) {
-    logger.info("Get all buses", { requestId });
-
+  async getAllBuses({ filters, page, limit, requestId }) {
     const skip = (page - 1) * limit;
 
-    const buses = await BusRepository.findAll({
+    const items = await BusRepository.findAll({
       filter: {
         ...filters,
         isDeleted: false,
@@ -55,51 +41,41 @@ class BusService {
       limit,
     });
 
-    const total = await BusRepository.count({
-      filter: {
-        ...filters,
-        isDeleted: false,
-      },
-    });
-
     return {
-      buses,
+      items,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        totalItems: items.length,
       },
     };
   }
 
-  // ================= UPDATE =================
-  async updateBus(busId, updateData, requestId) {
-    logger.info("Update bus started", { requestId, busId });
-
+  async updateBus({ busId, payload, requestId }) {
     const updated = await BusRepository.updateByBusId({
       busId,
-      updateData,
+      updateData: payload,
     });
 
     if (!updated) {
-      throw new NotFoundError({ message: "Bus not found" });
+      throw new NotFoundError({
+        message: "Bus not found",
+      });
     }
 
     return updated;
   }
 
-  // ================= DELETE (SOFT) =================
-  async deleteBus(busId, requestId) {
-    logger.info("Delete bus started", { requestId, busId });
-
+  async deleteBus({ busId, requestId }) {
     const deleted = await BusRepository.softDeleteByBusId({ busId });
 
     if (!deleted) {
-      throw new NotFoundError({ message: "Bus not found" });
+      throw new NotFoundError({
+        message: "Bus not found",
+      });
     }
 
-    return { message: "Bus deleted successfully" };
+    return true;
   }
 }
 

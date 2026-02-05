@@ -1,21 +1,27 @@
 const router = require("express").Router();
-const { asyncHandler } = require("../../helpers/handler/asyncHandler");
+
 const busController = require("../../controllers/bus.controller");
-const { requiredPermission } = require("../../middleware");
+const { asyncHandler } = require("../../helpers/handler/asyncHandler");
+const {
+  validateCreateBus,
+  validateUpdateBus,
+  validateBusId,
+  validateBusQuery,
+} = require("../../validation/bus.validate");
 
-// ================= BUS CRUD =================
-router.post("/", asyncHandler(busController.createBus));
+router.post("/", validateCreateBus, asyncHandler(busController.createBus));
 
-router.get("/", asyncHandler(busController.getAllBuses));
+router.get("/", validateBusQuery, asyncHandler(busController.getAllBuses));
 
-router.get("/:busId", asyncHandler(busController.getBusById));
+router.get("/:busId", validateBusId, asyncHandler(busController.getBusById));
 
-router.put(
+router.patch(
   "/:busId",
-
+  validateBusId,
+  validateUpdateBus,
   asyncHandler(busController.updateBus),
 );
 
-router.delete("/:busId", asyncHandler(busController.deleteBus));
+router.delete("/:busId", validateBusId, asyncHandler(busController.deleteBus));
 
 module.exports = router;

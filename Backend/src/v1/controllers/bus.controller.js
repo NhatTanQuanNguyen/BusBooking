@@ -5,16 +5,27 @@ const busService = require("../services/bus.service");
 class BusController {
   createBus = async (req, res) => {
     const requestId = req.requestId;
+    const { busId, companyId } = req.body;
 
-    logger.info("Create bus request", { requestId });
+    logger.info("Create bus request", {
+      requestId,
+      busId,
+      companyId,
+    });
 
-    const data = await busService.createBus(req.body, requestId);
+    const bus = await busService.createBus({
+      payload: req.body,
+      requestId,
+    });
 
-    logger.info("Create bus success", { requestId });
+    logger.info("Create bus success", {
+      requestId,
+      busId: bus.busId,
+    });
 
     return new OK({
       message: "Bus created successfully",
-      data,
+      data: bus,
     }).send(res);
   };
 
@@ -22,13 +33,33 @@ class BusController {
     const requestId = req.requestId;
     const { busId } = req.params;
 
-    const data = await busService.getBusById(busId, requestId);
+    logger.info("Get bus by id request", {
+      requestId,
+      busId,
+    });
 
-    return new OK({ data }).send(res);
+    const bus = await busService.getBusById({
+      busId,
+      requestId,
+    });
+
+    logger.info("Get bus by id success", {
+      requestId,
+      busId: bus.busId,
+    });
+
+    return new OK({ data: bus }).send(res);
   };
 
   getAllBuses = async (req, res) => {
     const requestId = req.requestId;
+
+    logger.info("Get all buses request", {
+      requestId,
+      companyId: req.query.companyId,
+      status: req.query.status,
+      type: req.query.type,
+    });
 
     const filters = {
       companyId: req.query.companyId,
@@ -36,14 +67,24 @@ class BusController {
       type: req.query.type,
     };
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
-    const data = await busService.getAllBuses(filters, page, limit, requestId);
+    const result = await busService.getAllBuses({
+      filters,
+      page,
+      limit,
+      requestId,
+    });
+
+    logger.info("Get all buses success", {
+      requestId,
+      total: result.pagination.totalItems,
+    });
 
     return new OK({
-      data: data.buses,
-      meta: data.pagination,
+      data: result.items,
+      meta: result.pagination,
     }).send(res);
   };
 
@@ -51,11 +92,25 @@ class BusController {
     const requestId = req.requestId;
     const { busId } = req.params;
 
-    const data = await busService.updateBus(busId, req.body, requestId);
+    logger.info("Update bus request", {
+      requestId,
+      busId,
+    });
+
+    const bus = await busService.updateBus({
+      busId,
+      payload: req.body,
+      requestId,
+    });
+
+    logger.info("Update bus success", {
+      requestId,
+      busId: bus.busId,
+    });
 
     return new OK({
       message: "Bus updated successfully",
-      data,
+      data: bus,
     }).send(res);
   };
 
@@ -63,7 +118,20 @@ class BusController {
     const requestId = req.requestId;
     const { busId } = req.params;
 
-    await busService.deleteBus(busId, requestId);
+    logger.info("Delete bus request", {
+      requestId,
+      busId,
+    });
+
+    await busService.deleteBus({
+      busId,
+      requestId,
+    });
+
+    logger.info("Delete bus success", {
+      requestId,
+      busId,
+    });
 
     return new OK({
       message: "Bus deleted successfully",
