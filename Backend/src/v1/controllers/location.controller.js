@@ -46,12 +46,10 @@ class LocationController {
         const {
             limit = 10,
             skip = 0,
-            type,
             status
         } = req.query
 
         const filter = {}
-        if (type) filter.type = type
         if (status) filter.status = status
 
         const busCompanyId = req.busCompanyId
@@ -61,8 +59,8 @@ class LocationController {
             {
                 busCompanyId,
                 filter,
-                limit: Number(limit),
-                skip: Number(skip)
+                limit,
+                skip
             },
             { requestId }
         )
@@ -71,14 +69,14 @@ class LocationController {
             message: 'Location list',
             data: locations,
             meta: {
-                limit: Number(limit),
-                skip: Number(skip),
+                limit,
+                skip,
                 count: locations.length
             }
         }).send(res)
     }
 
-    // PUT /locations/:id
+    // PATCH /locations/:id
     updateLocation = async (req, res, next) => {
         const busCompanyId = req.busCompanyId
         const requestId = req.requestId

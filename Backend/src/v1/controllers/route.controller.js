@@ -58,8 +58,8 @@ class RouteController {
             {
                 busCompanyId,
                 filter,
-                limit: Number(limit),
-                skip: Number(skip)
+                limit,
+                skip
             },
             {requestId}
         )
@@ -67,14 +67,14 @@ class RouteController {
             message: 'Route list',
             data: routes,
             meta: {
-                limit: Number(limit),
-                skip: Number(skip),
+                limit,
+                skip,
                 count: routes.length
             }
         }).send(res)
     }
 
-    //put
+    //patch
     updateRoute = async (req, res, next) => {
         const busCompanyId = req.busCompanyId
         const requestId = req.requestId

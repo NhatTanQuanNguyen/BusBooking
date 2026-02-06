@@ -13,17 +13,13 @@ class RouteService {
             destinationId,
             code,
             minTime,
-            maxTime,
-            stops = []
+            maxTime
         } = payload
 
-        if (!originId || !destinationId) {
-            throw new BadRequestError({ message: 'originId and destinationId are required' })
-        }
-        if (originId.toString() === destinationId.toString()) {
+        if (originId === destinationId) {
             throw new BadRequestError({ message: 'Origin and destination must be different' })
         }
-        if (minTime && maxTime && minTime > maxTime) {
+        if (minTime !== null && maxTime !== null && minTime > maxTime) {
             throw new BadRequestError({ message: 'minTime must be <= maxTime' })
         }
 
@@ -45,11 +41,6 @@ class RouteService {
                 ttl: 60
             })
             throw new BadRequestError({ message: 'Route code already exists' })
-        }
-
-        const orders = stops.map(s => s.order)
-        if (new Set(orders).size !== orders.length) {
-            throw new BadRequestError({ message: 'Route stop order duplicated' })
         }
 
         const route = await RouteRepository.create({
@@ -107,7 +98,7 @@ class RouteService {
         await redisCacheService.setCacheTTL({
             key: listCacheKey,
             value: routes,
-            ttl: 30
+            ttl: 180
         })
 
         logger.info('Route found successfully', {
@@ -147,6 +138,10 @@ class RouteService {
     async deleteRoute({busCompanyId, routeId}, {requestId}) {
         logger.warn('Delete route started', { requestId, routeId })
 
+        await redisCacheService.deleteCache({
+            key: `route:detail:${busCompanyId}:${routeId}`
+        })
+
         const deleted = await RouteRepository.softDelete({
             busCompanyId,
             routeId
@@ -155,15 +150,6 @@ class RouteService {
         if (!deleted) {
             throw new NotFoundError({ message: 'Route not found' })
         }
-
-        logger.info('Route deleted from DB', {
-            requestId,
-            routeId
-        })
-
-        await redisCacheService.deleteCache({
-            key: `route:detail:${busCompanyId}:${routeId}`
-        })
 
         logger.info('Route deleted successfully', {
             requestId,

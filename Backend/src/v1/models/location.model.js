@@ -18,27 +18,13 @@ const locationSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        type: {
-            type: String,
-            enum: ['CITY', 'DISTRICT', 'STATION'],
-            required: true
-        },
         address: {
             type: String
-        },
-        geo: {
-            lat: {
-                type: Number
-            },
-            lng: {
-                type: Number
-            }
         },
         status: {
             type: String,
             enum: ['ACTIVE', 'INACTIVE'],
             default: 'ACTIVE',
-            index: true
         },
         isDeleted: {
             type: Boolean,
@@ -52,8 +38,12 @@ const locationSchema = new mongoose.Schema(
     }
 )
 
+locationSchema.index(
+  { busCompanyId: 1, code: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+)
+
 locationSchema.index({name: 1})
-locationSchema.index({type: 1})
 
 module.exports = {
     LocationModel: mongoose.model(DOCUMENT_NAME, locationSchema)

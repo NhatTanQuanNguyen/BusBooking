@@ -2,57 +2,6 @@ const mongoose = require('mongoose')
 const DOCUMENT_NAME = 'route'
 const COLLECTION_NAME = 'routes'
 
-//RouteStop - embedded
-const routeStopSchema = new mongoose.Schema(
-    {
-        order: {
-            type: Number,
-            required: true
-        },
-        placeId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'location',
-            required: true
-        },
-        stopType: {
-            type: String,
-            enum: ['PICK_UP', 'DROP_OFF', 'BOTH'],
-            required: true
-        }
-    },
-    {_id: false}
-)
-
-//RouteMeta - embedded
-const routeMetaSchema = new mongoose.Schema(
-    {
-        tags: {
-            type: [String],
-            default: []
-        },
-        description: {
-            type: String
-        }
-    },
-    {_id: false}
-)
-
-//RoutePolicy - embedded
-const routePolicySchema = new mongoose.Schema(
-    {
-        type: {
-            type: String,
-            required: true
-        },
-        rules: {
-            type: Object,
-            default: {}
-        }
-    },
-    {_id: false}
-)
-
-//Route - aggregate root
 const routeSchema = new mongoose.Schema(
     {
         busCompanyId: {
@@ -80,13 +29,16 @@ const routeSchema = new mongoose.Schema(
             required: true
         },
         distanceKm: {
-            type: Number
+            type: Number,
+            default: null
         },
         minTime: {
-            type: Number
+            type: Number,
+            default: null
         },
         maxTime: {
-            type: Number
+            type: Number,
+            default: null
         },
         status: {
             type: String,
@@ -95,16 +47,8 @@ const routeSchema = new mongoose.Schema(
             index: true
         },
         stops: {
-            type: [routeStopSchema],
-            default: []
-        },
-        policies: {
-            type: [routePolicySchema],
-            default: []
-        },
-        meta: {
-            type: routeMetaSchema,
-            default: {}
+            type: String,
+            trim: true
         },
         isDeleted: {
             type: Boolean,
@@ -127,7 +71,8 @@ routeSchema.index({
     busCompanyId: 1,
     originId: 1,
     destinationId: 1,
-    isDeleted: 1
+    isDeleted: 1,
+    status: 1
 })
 
 module.exports = {

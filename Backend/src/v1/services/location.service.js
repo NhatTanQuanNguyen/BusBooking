@@ -6,33 +6,13 @@ const { redisCacheService } = require('./cache.service')
 class LocationService {
     async createLocation({busCompanyId, payload}, {requestId}) {
         logger.info('Create location started', { requestId, busCompanyId })
-        const {
-            code,
-            name,
-            type
-        } = payload
-
-        if (!code || !name || !type) {
-            throw new BadRequestError({ message: 'Missing required fields' })
-        }
-
-        const codeCacheKey = `location:code:${busCompanyId}:${code}`
-        const cached = await redisCacheService.getCache({key: codeCacheKey})
-        if (cached) {
-            throw new BadRequestError({ message: 'Location code already exists' })
-        }
-
+        
         const existed = await LocationRepository.exists({
             busCompanyId,
-            filter: {code}
+            filter: {code: payload.code}
         })
 
         if (existed) {
-            await redisCacheService.setCacheTTL({
-                key: codeCacheKey,
-                value: true,
-                ttl: 60
-            })
             throw new BadRequestError({ message: 'Location code already exists' })
         }
         const location = await LocationRepository.create({
@@ -99,7 +79,7 @@ class LocationService {
         await redisCacheService.setCacheTTL({
             key: listCacheKey,
             value: locations,
-            ttl: 30
+            ttl: 180
         })
 
         logger.info('Locations found successfully', {
@@ -138,6 +118,10 @@ class LocationService {
     async deleteLocation({busCompanyId, locationId}, {requestId}) {
         logger.warn('Delete location started', { requestId, locationId })
 
+        await redisCacheService.deleteCache({
+            key: `location:detail:${busCompanyId}:${locationId}`
+        })
+
         const deleted = await LocationRepository.softDelete({
             busCompanyId,
             locationId
@@ -147,9 +131,6 @@ class LocationService {
             throw new NotFoundError({ message: 'Location not found' })
         }
 
-        await redisCacheService.deleteCache({
-            key: `location:detail:${busCompanyId}:${locationId}`
-        })
 
         logger.info('Location deleted successfully', {
             requestId,
