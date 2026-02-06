@@ -1,7 +1,6 @@
 const LocationRepository = require('../models/repositories/location.repo')
 const {BadRequestError, NotFoundError} = require('../core/error.response')
 const { logger } = require('../helpers/logger/myLogger')
-const { redisCacheService } = require('./cache.service')
 
 class LocationService {
     async createLocation({busCompanyId, payload}, {requestId}) {
@@ -29,13 +28,6 @@ class LocationService {
     }
 
     async getLocationById({busCompanyId, locationId}, {requestId}) {
-        const cacheKey = `location:detail:${busCompanyId}:${locationId}`
-
-        const cached = await redisCacheService.getCache({key: cacheKey})
-        if (cached) {
-            logger.info('Location loaded from cache', { requestId, locationId })
-            return cached
-        }
 
         const location = await LocationRepository.findById({
             busCompanyId,
@@ -46,11 +38,6 @@ class LocationService {
             throw new NotFoundError({ message: 'Location not found' })
         }
 
-        await redisCacheService.setCache({
-            key: cacheKey,
-            value: location
-        })
-
         logger.info('Location gotten successfully', {
             requestId,
             locationId
@@ -60,26 +47,12 @@ class LocationService {
     }
 
     async listLocations({ busCompanyId, filter = {}, limit, skip}, {requestId}) {
-        const listCacheKey = `location:list:${busCompanyId}:${JSON.stringify({
-            filter,
-            limit,
-            skip
-        })}`
-
-        const cached = await redisCacheService.getCache({ key: listCacheKey })
-        if (cached) return cached
 
         const locations = await LocationRepository.findMany({
             busCompanyId,
             filter,
             limit,
             skip
-        })
-
-        await redisCacheService.setCacheTTL({
-            key: listCacheKey,
-            value: locations,
-            ttl: 180
         })
 
         logger.info('Locations found successfully', {
@@ -103,10 +76,6 @@ class LocationService {
             throw new NotFoundError({ message: 'Location not found' })
         }
 
-        await redisCacheService.deleteCache({
-            key: `location:detail:${busCompanyId}:${locationId}`
-        })
-
         logger.info('Location updated successfully', {
             requestId,
             locationId
@@ -117,10 +86,6 @@ class LocationService {
 
     async deleteLocation({busCompanyId, locationId}, {requestId}) {
         logger.warn('Delete location started', { requestId, locationId })
-
-        await redisCacheService.deleteCache({
-            key: `location:detail:${busCompanyId}:${locationId}`
-        })
 
         const deleted = await LocationRepository.softDelete({
             busCompanyId,
