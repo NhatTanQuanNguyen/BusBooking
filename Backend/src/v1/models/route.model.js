@@ -44,7 +44,6 @@ const routeSchema = new mongoose.Schema(
             type: String,
             enum: ['ACTIVE', 'INACTIVE'],
             default: 'ACTIVE',
-            index: true
         },
         stops: {
             type: String,
