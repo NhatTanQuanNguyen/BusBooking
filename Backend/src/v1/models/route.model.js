@@ -63,16 +63,13 @@ const routeSchema = new mongoose.Schema(
 
 routeSchema.index(
   { busCompanyId: 1, code: 1 },
-  { unique: true }
+  { unique: true, partialFilterExpression: { isDeleted: false } }
 )
 
-routeSchema.index({
-    busCompanyId: 1,
-    originId: 1,
-    destinationId: 1,
-    isDeleted: 1,
-    status: 1
-})
+routeSchema.index(
+  { busCompanyId: 1, originId: 1, destinationId: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+)
 
 module.exports = {
     RouteModel: mongoose.model(DOCUMENT_NAME, routeSchema)

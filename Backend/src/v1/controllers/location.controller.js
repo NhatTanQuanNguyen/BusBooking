@@ -5,8 +5,7 @@ class LocationController {
 
     // POST /locations
     createLocation = async (req, res, next) => {
-        const busCompanyId = req.busCompanyId
-        const requestId = req.requestId
+        const { busCompanyId, requestId } = req
 
         const location = await LocationService.createLocation(
             {
@@ -24,8 +23,7 @@ class LocationController {
 
     // GET /locations/:id
     getLocationById = async (req, res, next) => {
-        const busCompanyId = req.busCompanyId
-        const requestId = req.requestId
+        const { busCompanyId, requestId } = req
 
         const location = await LocationService.getLocationById(
             {
@@ -42,44 +40,42 @@ class LocationController {
     }
 
     // GET /locations
-    listLocations = async (req, res, next) => {
-        const {
-            limit = 10,
-            skip = 0,
-            status
-        } = req.query
+    listActiveLocations = async (req, res, next) => {
+        const { busCompanyId, requestId } = req
+        const { limit = 10, skip = 0 } = req.query
 
-        const filter = {}
-        if (status) filter.status = status
-
-        const busCompanyId = req.busCompanyId
-        const requestId = req.requestId
-
-        const locations = await LocationService.listLocations(
-            {
-                busCompanyId,
-                filter,
-                limit,
-                skip
-            },
-            { requestId }
-        )
+        const locations = await LocationService.listActiveLocations({
+            busCompanyId,
+            limit,
+            skip
+        }, { requestId })
 
         return new OK({
-            message: 'Location list',
-            data: locations,
-            meta: {
-                limit,
-                skip,
-                count: locations.length
-            }
+            message: 'Active location list',
+            data: locations
         }).send(res)
     }
 
+    listInactiveLocations = async (req, res, next) => {
+        const { busCompanyId, requestId } = req
+        const { limit = 10, skip = 0 } = req.query
+
+        const locations = await LocationService.listInactiveLocations({
+            busCompanyId,
+            limit,
+            skip
+        }, { requestId })
+
+        return new OK({
+            message: 'Inactive location list',
+            data: locations
+        }).send(res)
+    }
+
+
     // PATCH /locations/:id
     updateLocation = async (req, res, next) => {
-        const busCompanyId = req.busCompanyId
-        const requestId = req.requestId
+        const { busCompanyId, requestId } = req
 
         const location = await LocationService.updateLocation(
             {
@@ -98,8 +94,7 @@ class LocationController {
 
     // DELETE /locations/:id
     deleteLocation = async (req, res, next) => {
-        const busCompanyId = req.busCompanyId
-        const requestId = req.requestId
+        const { busCompanyId, requestId } = req
 
         await LocationService.deleteLocation(
             {
@@ -113,6 +108,39 @@ class LocationController {
             message: 'Location deleted successfully'
         }).send(res)
     }
+
+    activateLocation = async (req, res, next) => {
+        const { busCompanyId, requestId } = req
+        const location = await LocationService.activateLocation(
+            {
+                busCompanyId,
+                locationId: req.params.id
+            },
+            { requestId }
+        )
+
+        return new OK({
+            message: 'Location activated',
+            data: location
+        }).send(res)
+    }
+
+    deactivateLocation = async (req, res, next) => {
+        const { busCompanyId, requestId } = req
+        const location = await LocationService.deactivateLocation(
+            {
+                busCompanyId,
+                locationId: req.params.id
+            },
+            { requestId }
+        )
+
+        return new OK({
+            message: 'Location deactivated',
+            data: location
+        }).send(res)
+    }
+
 }
 
 module.exports = {

@@ -26,7 +26,7 @@ const createRoute = {
     stops: Joi.string().trim().allow('', null),
 
     status: Joi.string().valid('ACTIVE', 'INACTIVE')
-  })
+  }).options({ allowUnknown: false })
 }
 
 /**
@@ -40,7 +40,7 @@ const listRoutes = {
     status: Joi.string().valid('ACTIVE', 'INACTIVE'),
     originId: objectId,
     destinationId: objectId
-  })
+  }).options({ allowUnknown: false })
 }
 
 /**
@@ -49,7 +49,7 @@ const listRoutes = {
 const getRouteById = {
   params: Joi.object({
     id: objectId.required()
-  })
+  }).options({ allowUnknown: false })
 }
 
 /**
@@ -66,13 +66,20 @@ const updateRoute = {
     maxTime: Joi.number().min(0).allow(null),
     stops: Joi.string().trim().allow('', null),
     status: Joi.string().valid('ACTIVE', 'INACTIVE')
-  }).min(1) 
+  }).min(1).options({ allowUnknown: false })
 }
 
 /**
  * DELETE /routes/:id
  */
 const deleteRoute = {
+  params: Joi.object({
+    id: objectId.required()
+  }).options({ allowUnknown: false })
+}
+
+//changeStatus
+const changeStatus = {
   params: Joi.object({
     id: objectId.required()
   })
@@ -83,5 +90,6 @@ module.exports = {
   listRoutes,
   getRouteById,
   updateRoute,
-  deleteRoute
+  deleteRoute,
+  changeStatus
 }

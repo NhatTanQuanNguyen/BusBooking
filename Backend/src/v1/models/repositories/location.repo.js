@@ -7,12 +7,18 @@ class LocationRepository {
         ...payload
         })
     }
+    findOne = async ({ busCompanyId, filter = {} }) => {
+        return await LocationModel.findOne({
+            busCompanyId,
+            isDeleted: false,
+            ...filter
+        }).lean()
+    }
 
     findMany = async ({ busCompanyId, filter = {}, limit, skip }) => {
         return LocationModel.find({
         busCompanyId,
         isDeleted: false,
-        status: 'ACTIVE',
         ...filter
         })
         .limit(limit)

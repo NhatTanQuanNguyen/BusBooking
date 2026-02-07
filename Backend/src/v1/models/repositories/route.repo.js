@@ -21,7 +21,6 @@ class RouteRepository {
         return await RouteModel.findOne({
             busCompanyId,
             isDeleted: false,
-            status: 'ACTIVE',
             ...filter
         }).lean()
     }
@@ -53,15 +52,18 @@ class RouteRepository {
     //update
     updateById = async ({busCompanyId, routeId, payload}) => {
         const { code, busCompanyId: _, isDeleted, ...safePayload } = payload
+        const cleanPayload = Object.fromEntries(
+            Object.entries(safePayload).filter(([_, v]) => v !== undefined)
+        )
 
-        return await RouteModel.findOneAndUpdate(
+        return RouteModel.findOneAndUpdate(
             {
                 _id: routeId,
                 busCompanyId,
                 isDeleted: false
             },
-            safePayload,
-            {new: true}
+            { $set: cleanPayload },
+            { new: true }
         ).lean()
     }
 
@@ -74,8 +76,11 @@ class RouteRepository {
             isDeleted: false
         },
         {
-            isDeleted: true,
-            status: 'INACTIVE'
+            $set: 
+                {
+                    isDeleted: true,
+                    status: 'INACTIVE'
+                }
         },
         { new: true }
         ).lean()

@@ -6,6 +6,27 @@ const { requiredPermission } = require('../../middleware')
 const routeValidate = require('../../validates/route.validate')
 const validate = require('../../validates/validate')
 
+// GET /routes/active
+router.get(
+  '/active',
+  validate(routeValidate.listRoutes),
+  asyncHandler(RouteController.listActiveRoutes)
+)
+
+// GET /routes/inactive
+router.get(
+  '/inactive',
+  validate(routeValidate.listRoutes),
+  asyncHandler(RouteController.listInactiveRoutes)
+)
+
+// GET /routes/:id
+router.get(
+  '/:id',
+  validate(routeValidate.getRouteById),
+  asyncHandler(RouteController.getRouteById)
+)
+
 router.post('/', 
     //authentication, 
     //requiredPermission('route:create'),
@@ -13,15 +34,29 @@ router.post('/',
     asyncHandler(RouteController.createRoute)
 )
 
-router.get('/', validate(routeValidate.listRoutes), asyncHandler(RouteController.listRoutes))
-
-router.get('/:id', validate(routeValidate.getRouteById), asyncHandler(RouteController.getRouteById))
-
 router.patch('/:id', 
     //authentication,
     //requiredPermission('route:update'),
     validate(routeValidate.updateRoute), 
     asyncHandler(RouteController.updateRoute)
+)
+
+// PATCH /routes/:id/activate
+router.patch(
+  '/:id/activate',
+  // authentication,
+  // requiredPermission('route:update'),
+  validate(routeValidate.changeStatus),
+  asyncHandler(RouteController.activateRoute)
+)
+
+// PATCH /routes/:id/deactivate
+router.patch(
+  '/:id/deactivate',
+  // authentication,
+  // requiredPermission('route:update'),
+  validate(routeValidate.changeStatus),
+  asyncHandler(RouteController.deactivateRoute)
 )
 
 router.delete('/:id', 
