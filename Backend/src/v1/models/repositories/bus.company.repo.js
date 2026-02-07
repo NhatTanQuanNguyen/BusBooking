@@ -1,36 +1,35 @@
 const { BusCompanyModel } = require('../bus.company.model');
 
 class BusCompanyRepository {
-    async createBusCompany({brand_name, legal_entity}) {
+    async createBusCompany({brand_name, legal_entity, branches}) {
         return await BusCompanyModel.create({
             brand_name,
-            legal_entity
+            legal_entity,
+            branches
         });
     }
 
     async updateBusCompany({ companyId, updateData }) {
         const setData = { ...updateData }
-        if (setData.legal_entity && typeof setData.legal_entity === 'object') {
-            const legalEntity = setData.legal_entity
-            delete setData.legal_entity
+        const flattenNested = (field) => {
+            if (setData[field] && typeof setData[field] === 'object') {
+                const nested = setData[field]
+                delete setData[field]
 
-            Object.keys(legalEntity).forEach((key) => {
-                if (legalEntity[key] !== undefined) {
-                    setData[`legal_entity.${key}`] = legalEntity[key]
-                }
-            })
+                Object.keys(nested).forEach((key) => {
+                    if (nested[key] !== undefined) {
+                        setData[`${field}.${key}`] = nested[key]
+                    }
+                })
+            }
         }
+
+        flattenNested('legal_entity')
 
         return await BusCompanyModel.findByIdAndUpdate(
             companyId,
-            { 
-                $set: setData 
-            },
-            { 
-                new: true,           
-                runValidators: true,  
-                context: 'query' 
-            }
+            { $set: setData },
+            { new: true }
         ).lean();
     }
 
@@ -38,10 +37,9 @@ class BusCompanyRepository {
         return await BusCompanyModel.findById(id).lean();
     }
 
-    async findByBrandName(brand_name) {
-        return await BusCompanyModel.findOne({ brand_name }).lean();
+    async findByTaxCode(tax_code) {
+        return await BusCompanyModel.findOne({ 'legal_entity.tax_code': tax_code }).lean();
     }
-
 
     async incrementMonthlyUsage(companyId) {
         return await BusCompanyModel.findByIdAndUpdate(companyId, {

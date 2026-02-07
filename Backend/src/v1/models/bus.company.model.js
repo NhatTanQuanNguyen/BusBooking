@@ -15,6 +15,10 @@ const busCompanySchema = new mongoose.Schema({
         address: String,
         tax_code: String
     },
+    branches: [{
+        name: String,
+        address: String,
+    }],
     subscription: {
         plan_name: String, 
         expires_at: Date,

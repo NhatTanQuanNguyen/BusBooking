@@ -6,40 +6,76 @@ const { SubscriptionPlanModel } = require('../models/subscription.plan.model')
 const { redisCacheService } = require('./cache.service')
 
 class BusCompanyService {
-    registerBusCompany = async ({ brand_name, legal_entity }, { requestId }) => {
+    registerBusCompany = async ({ brand_name, legal_entity, branch }, { requestId }) => {
         logger.info('Bus company register start', { brand_name, requestId }) 
 
-        const existed = await busCompanyRepo.findByBrandName(brand_name);
+        const existed = await busCompanyRepo.findByTaxCode(legal_entity.tax_code)
         if (existed) {
-            throw new BadRequestError({ message: 'Bus company already exists' });
+            throw new BadRequestError({ message: 'Bus company with this tax code already exists' })
         }
 
-        const newBusCompany = await busCompanyRepo.createBusCompany({
+        const busCompanyData = {
             brand_name,
-            legal_entity
-        });
+            legal_entity,
+            branches: []
+        }
+
+        if (branch) {
+            busCompanyData.branches.push({
+                name: branch.name,
+                address: branch.address,
+            })
+        }
+
+        const newBusCompany = await busCompanyRepo.createBusCompany(busCompanyData)
 
         return {
-            company: getInfoData(['_id', 'brand_name'], newBusCompany),
+            company: getInfoData(['_id', 'brand_name', 'legal_entity', 'branches'], newBusCompany),
         }
+    }
+
+    addBranch = async ({ company_id, branch}, { requestId }) => {
+        logger.info('Bus company add branch start', { company_id, requestId })
+
+        const company = await busCompanyRepo.findById(company_id)
+        if (!company) {
+            throw new NotFoundError({ message: 'Bus company not found' })
+        }
+
+        const existed = company.branches.find(b => b.name === branch.name)
+        if (existed) {
+            throw new BadRequestError({ message: 'Branch already exists' })
+        }
+
+        const updatedBranches = [
+            ...(company.branches || []), 
+            branch
+        ]
+
+        return await this.updateCompany({ 
+            company_id, 
+            payload: { branches: updatedBranches } 
+        }, { requestId })
     }
 
     subscribePlan = async ({ company_id, plan_name }, { requestId }) => {
         logger.info('Bus company subscribe start', { company_id, plan_name, requestId })
 
-        const plan = await SubscriptionPlanModel.findOne({ plan_name })
+        const normalizedPlanName = plan_name.trim().toLowerCase()
+
+        const plan = await SubscriptionPlanModel.findOne({ plan_name: normalizedPlanName }).lean()
         if (!plan) {
             throw new NotFoundError({ message: 'Subscription plan not found' })
         }
 
-        logger.info('Subscription plan found', { plan_name, requestId })
+        logger.info('Subscription plan found', { normalizedPlanName, requestId })
 
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + plan.duration_days)
 
         const updateData = {
             subscription: {
-                plan_name: plan.plan_name,
+                plan_name: normalizedPlanName,
                 expires_at: expiresAt,
                 quotas: {
                     ...plan.quotas,
@@ -64,12 +100,13 @@ class BusCompanyService {
         }
 
         logger.info('Bus company found', { company_id, requestId })
-        
-        const updateData = getInfoData([
-            'brand_name', 
-            'legal_entity', 
-            'subscription'
-        ], payload)
+
+        const updateData = {
+            ...(payload.brand_name !== undefined && { brand_name: payload.brand_name }),
+            ...(payload.legal_entity !== undefined && { legal_entity: payload.legal_entity }),
+            ...(payload.branches !== undefined && { branches: payload.branches }),
+            ...(payload.subscription !== undefined && { subscription: payload.subscription }),
+        };
 
         const updatedCompany = await busCompanyRepo.updateBusCompany({
             companyId: company_id,

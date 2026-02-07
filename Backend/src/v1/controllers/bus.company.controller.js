@@ -20,6 +20,22 @@ class BusCompanyController {
         }).send(res);
     }
 
+    addBranch = async (req, res, next) => {
+        const requestId = req.requestId
+        const { company_id, branch } = req.body
+
+        logger.info('Bus company add branch start', { requestId, company_id, branch })
+
+        const data = await BusCompanyService.addBranch({ company_id, branch }, { requestId })
+        
+        logger.info('Bus company add branch done', { requestId, company_id })
+
+        return new OK({
+            message: 'Branch added successfully',
+            data
+        }).send(res);
+    }
+
     subscribePlan = async (req, res, next) => {
         const requestId = req.requestId
         const { company_id, plan_name } = req.body;
@@ -38,8 +54,7 @@ class BusCompanyController {
 
     updateProfile = async (req, res, next) => {
         const requestId = req.requestId
-        const payload = req.body
-        const company_id = req.params?.company_id || payload?.company_id
+        const { company_id, ...payload } = req.body
 
         logger.info('Bus company update start', { requestId, company_id })
 

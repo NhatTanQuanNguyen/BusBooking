@@ -14,6 +14,10 @@ const legalEntity = Joi.object({
 const registration = Joi.object({
     brand_name: Joi.string().trim().min(3).max(100).required(),
     legal_entity: legalEntity.optional(),
+    branch: Joi.object({
+        name: Joi.string().trim().max(100).required(),
+        address: Joi.string().trim().max(200).required(),
+    }).optional(),
 });
 
 const subscribePlan = Joi.object({
@@ -25,7 +29,12 @@ const update = Joi.object({
     company_id: objectIdSchema,
     brand_name: Joi.string().trim().min(3).max(100).optional(),
     legal_entity: legalEntity.optional(),
-});
+    branch: Joi.object({
+        name: Joi.string().trim().max(100).required(),
+        address: Joi.string().trim().max(200).required(),
+    }).optional(),
+}).unknown(false);
+
 
 const quota = Joi.object({
     company_id: objectIdSchema,
