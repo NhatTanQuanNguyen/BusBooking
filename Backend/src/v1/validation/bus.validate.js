@@ -16,20 +16,41 @@ const createBusSchema = Joi.object({
 
   companyId: Joi.string().required(),
 
-  type: Joi.string().valid("seat", "sleeper", "limousine", "vip").required(),
+  type: Joi.string().min(2).max(50).required(),
 
-  status: Joi.string()
-    .valid("active", "inactive", "maintenance", "repair")
-    .default("active"),
+  status: Joi.string().min(2).max(50).default("active"),
 
   miles: Joi.number().min(0).default(0),
+
+  seats: Joi.array()
+    .items(
+      Joi.object({
+        seatCode: Joi.string().required(),
+        floor: Joi.number().min(1).default(1),
+        row: Joi.number().min(1),
+        column: Joi.number().min(1),
+        type: Joi.string().min(2).max(50).default("seat"),
+        isActive: Joi.boolean().default(true),
+      }),
+    )
+    .default([]),
 });
 
 // UPDATE (PATCH)
 const updateBusSchema = Joi.object({
-  type: Joi.string().valid("seat", "sleeper", "limousine", "vip"),
-  status: Joi.string().valid("active", "inactive", "maintenance", "repair"),
+  type: Joi.string().min(2).max(50),
+  status: Joi.string().min(2).max(50),
   miles: Joi.number().min(0),
+  seats: Joi.array().items(
+    Joi.object({
+      seatCode: Joi.string().required(),
+      floor: Joi.number().min(1).default(1),
+      row: Joi.number().min(1),
+      column: Joi.number().min(1),
+      type: Joi.string().min(2).max(50),
+      isActive: Joi.boolean(),
+    }),
+  ),
 }).min(1);
 
 // PARAM
@@ -42,13 +63,13 @@ const busIdParamSchema = Joi.object({
 // QUERY
 const busQuerySchema = Joi.object({
   companyId: Joi.string(),
-  status: Joi.string().valid("active", "inactive", "maintenance", "repair"),
-  type: Joi.string().valid("seat", "sleeper", "limousine", "vip"),
+  status: Joi.string().min(2).max(50),
+  type: Joi.string().min(2).max(50),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
 });
 
-// ================= MIDDLEWARES =================
+// ================= MIDDLEWARE =================
 
 const validate =
   (schema, source = "body") =>

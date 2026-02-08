@@ -3,18 +3,21 @@ const { logger } = require("../helpers/logger/myLogger");
 const busService = require("../services/bus.service");
 
 class BusController {
+  // =======================
+  // CREATE
+  // =======================
   createBus = async (req, res) => {
     const requestId = req.requestId;
-    const { busId, companyId } = req.body;
+    const payload = req.body;
 
     logger.info("Create bus request", {
       requestId,
-      busId,
-      companyId,
+      busId: payload?.busId,
+      companyId: payload?.companyId,
     });
 
     const bus = await busService.createBus({
-      payload: req.body,
+      payload,
       requestId,
     });
 
@@ -45,7 +48,7 @@ class BusController {
 
     logger.info("Get bus by id success", {
       requestId,
-      busId: bus.busId,
+      busId,
     });
 
     return new OK({ data: bus }).send(res);
@@ -56,16 +59,13 @@ class BusController {
 
     logger.info("Get all buses request", {
       requestId,
-      companyId: req.query.companyId,
-      status: req.query.status,
-      type: req.query.type,
+      query: req.query,
     });
 
-    const filters = {
-      companyId: req.query.companyId,
-      status: req.query.status,
-      type: req.query.type,
-    };
+    const filters = {};
+
+    if (req.query.status) filters.status = req.query.status;
+    if (req.query.type) filters.type = req.query.type;
 
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
@@ -91,6 +91,7 @@ class BusController {
   updateBus = async (req, res) => {
     const requestId = req.requestId;
     const { busId } = req.params;
+    const payload = req.body;
 
     logger.info("Update bus request", {
       requestId,
@@ -99,13 +100,13 @@ class BusController {
 
     const bus = await busService.updateBus({
       busId,
-      payload: req.body,
+      payload,
       requestId,
     });
 
     logger.info("Update bus success", {
       requestId,
-      busId: bus.busId,
+      busId,
     });
 
     return new OK({

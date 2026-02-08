@@ -7,7 +7,6 @@ const BusSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
 
     license: {
@@ -15,20 +14,16 @@ const BusSchema = new Schema(
       required: true,
       unique: true,
       uppercase: true,
-      index: true,
     },
 
     type: {
       type: String,
       required: true,
-      enum: ["seat", "sleeper", "limousine", "vip"],
     },
 
     status: {
       type: String,
-      enum: ["active", "inactive", "maintenance", "repair"],
       default: "active",
-      index: true,
     },
 
     miles: {
@@ -57,28 +52,11 @@ const BusSchema = new Schema(
           column: Number,
           type: {
             type: String,
-            enum: ["seat", "bed", "vip"],
             default: "seat",
           },
           isActive: {
             type: Boolean,
             default: true,
-          },
-        },
-      ],
-      default: [],
-    },
-
-    documents: {
-      type: [
-        {
-          docName: {
-            type: String,
-            required: true,
-          },
-          expiryDate: {
-            type: Date,
-            required: true,
           },
         },
       ],

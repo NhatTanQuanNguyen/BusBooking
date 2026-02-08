@@ -15,6 +15,9 @@ class BusRepository {
   async existsByBusId({ busId }) {
     return BusModel.exists({ busId, isDeleted: false });
   }
+  async countDocuments({ filter = {} }) {
+    return BusModel.countDocuments({ ...filter, isDeleted: false });
+  }
 
   async findAll({ filter = {}, skip = 0, limit = 10 }) {
     return BusModel.find({ ...filter, isDeleted: false })
