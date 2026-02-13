@@ -8,6 +8,8 @@ class RoleController{
 
     createRole = async (req,res,next) => {
         const {roleName,permissions} = req.body;
+
+        console.log({...req.body})
         return new OK({
             message : "OK",
             data : await this.roleServices.createRole({
