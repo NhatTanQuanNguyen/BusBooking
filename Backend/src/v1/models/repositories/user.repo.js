@@ -36,6 +36,17 @@ class UserRepository{
     async checkUserExist({email}){
         return UserModel.exists({user_email : email});
     }
+
+    async findAllUser() {
+    return await UserModel.find(
+        {},
+        {
+        user_password: 0,   // ❗ không bao giờ trả password
+        user_keyToken: 0    // ❗ dữ liệu nhạy cảm
+        }
+    ).limit().lean();
+    }
+
 }
 
 module.exports = new UserRepository()

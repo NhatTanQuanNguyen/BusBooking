@@ -25,6 +25,8 @@ class RoleServices{
                 role_permission : permissions
             })
 
+            console.log({role})
+
             if (!role) throw new BadRequestError({
                 message : "Create role failed !!!"
             })
@@ -34,6 +36,7 @@ class RoleServices{
             logger.error("Create role failled",{
                 error : error.message
             })
+            console.log({error})
             throw new ConflictError({
                 message : "Create role failled"
             })

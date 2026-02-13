@@ -5,7 +5,7 @@ const userRepo = require("../models/repositories/user.repo");
 const UserRepository = require("../models/repositories/user.repo");
 const userModel = require("../models/user.model");
 const { redisCacheService } = require("./cache.service");
-
+const {SingleFlightWrapper}  = require('../helpers/singleRequest/singleFlight')
 /**
  * @param {UserRepository} userRepository
  */
@@ -63,6 +63,12 @@ class UserServices {
         return {
             publicKey : found.user_keyToken
         }
+    }
+
+    getAllUser = async () => {
+        const result = SingleFlightWrapper.run('getalluser',this.userRepository.findAllUser)
+
+        return result
     }
 
     

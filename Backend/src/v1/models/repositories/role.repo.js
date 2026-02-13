@@ -8,6 +8,7 @@ class RoleRepository{
 
 
     insertRole = async ({role_name,role_permission}) => {
+        console.log({role_name,role_permission})
         return await RoleModel.create({
             role_name,
             role_permission
