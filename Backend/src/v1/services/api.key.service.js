@@ -1,24 +1,28 @@
 const {BadRequestError, ForbiddenError} = require('../core/error.response')
 const crypto = require('node:crypto')
 const { ApiKeyModel } = require('../models/apikey.model')
+const { logger } = require('../helpers/logger/myLogger')
+
 class ApiKeyServices{
-    generate = async ({permission = '0000'}) => {
+    generate = async ({ company_id, permission = '0000' }, { requestId }) => {
+        logger.info('Generating API key', { company_id, permission, requestId })
+
         const key = crypto.randomBytes(32).toString('hex')
 
         const apiKey = await ApiKeyModel.create({
+            company_id,
             key,
             permission
         })
 
         if (!apiKey) throw new BadRequestError({
-            message : "generate failled"
+            message : "generate failed"
         })
 
         return {
             apikey : apiKey.key,
-            description : apiKey.descripton
+            description : apiKey.description
         }
-
     }
 
 
@@ -50,7 +54,7 @@ class ApiKeyServices{
 
         if (permission !== apikey.permission) return false;
 
-        return true
+        return apikey
     }
 }
 
