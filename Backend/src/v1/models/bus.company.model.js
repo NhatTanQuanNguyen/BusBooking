@@ -1,0 +1,42 @@
+const mongoose = require('mongoose')
+
+const DOCUMENT_NAME = 'bus_company'
+const COLLECTION_NAME = 'bus_companies'
+
+const busCompanySchema = new mongoose.Schema({
+    brand_name: {
+        type: String,
+        required: true,
+        trim: true,
+        index: true
+    },
+    legal_entity: {
+        full_name: String,
+        address: String,
+        tax_code: String
+    },
+    branches: [{
+        name: String,
+        address: String,
+    }],
+    subscription: {
+        plan_name: String, 
+        expires_at: Date,
+        quotas: {
+            max_buses: Number,
+            max_routes: Number,
+            api_calls_per_month: Number,
+            current_month_usage: {
+                type: Number,
+                default: 0
+            }
+        }
+    },
+},{
+    timestamps : true,
+    collection : COLLECTION_NAME
+})
+
+module.exports = {
+    BusCompanyModel: mongoose.model(DOCUMENT_NAME, busCompanySchema)
+}
