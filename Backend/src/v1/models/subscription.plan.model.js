@@ -30,11 +30,15 @@ const planSchema = new mongoose.Schema({
             type: Number, 
             default: 1000 
         }
+    }, 
+    isDeleted: { 
+        type: Boolean, 
+        default: false 
     }
 }, { 
     timestamps: true,
     collection: COLLECTION_NAME
-});
+})
 
 module.exports = {
     SubscriptionPlanModel : mongoose.model(DOCUMENT_NAME, planSchema)
