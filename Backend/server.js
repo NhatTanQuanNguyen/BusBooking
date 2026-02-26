@@ -30,6 +30,47 @@ app.use('/v1/api',generateRequestId,router)
 
 //middleware
 
+const fs = require('fs')
+const { monitorEventLoopDelay } = require('perf_hooks')
+
+const h = monitorEventLoopDelay({ resolution: 10 })
+h.enable()
+
+const stream = fs.createWriteStream('./logs/event-loop-max-10s.log', {
+  flags: 'a'
+})
+
+let windowStart = Date.now()
+let maxInWindow = 0
+
+setInterval(() => {
+  const currentMax = h.max / 1e6 // ms
+
+  if (currentMax > maxInWindow) {
+    maxInWindow = currentMax
+  }
+
+  const now = Date.now()
+  if (now - windowStart >= 10_000) {
+    const record = {
+      ts: now,
+      max_event_loop_ms: Number(maxInWindow.toFixed(2))
+    }
+
+    stream.write(JSON.stringify(record) + '\n')
+
+    // reset window
+    windowStart = now
+    maxInWindow = 0
+  }
+
+  h.reset()
+}, 1000)
+
+process.on('SIGINT', () => {
+  stream.end()
+  process.exit(0)
+})
 
 //handler error
 app.use(handleError)
