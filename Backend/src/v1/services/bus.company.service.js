@@ -6,7 +6,7 @@ const { SubscriptionPlanModel } = require('../models/subscription.plan.model')
 const { redisCacheService } = require('./cache.service')
 
 class BusCompanyService {
-    registerBusCompany = async ({ brand_name, legal_entity, branch }, { requestId }) => {
+    registerBusCompany = async ({ brand_name, legal_entity, branches }, { requestId }) => {
         logger.info('Bus company register start', { brand_name, requestId }) 
 
         const existed = await busCompanyRepo.findByTaxCode(legal_entity.tax_code)
@@ -20,11 +20,11 @@ class BusCompanyService {
             branches: []
         }
 
-        if (branch) {
-            busCompanyData.branches.push({
+        if (branches && Array.isArray(branches) && branches.length > 0) {
+            busCompanyData.branches = branches.map(branch => ({
                 name: branch.name,
                 address: branch.address,
-            })
+            }))
         }
 
         const newBusCompany = await busCompanyRepo.createBusCompany(busCompanyData)
@@ -34,7 +34,11 @@ class BusCompanyService {
         }
     }
 
-    addBranch = async ({ company_id, branch}, { requestId }) => {
+    addBranch = async ({ company_id, branches}, { requestId }) => {
+        if (!branches || !Array.isArray(branches) || branches.length === 0) {
+            throw new BadRequestError({ message: 'Branches is required and must be a non-empty array' })
+        }
+
         logger.info('Bus company add branch start', { company_id, requestId })
 
         const company = await busCompanyRepo.findById(company_id)
@@ -42,24 +46,111 @@ class BusCompanyService {
             throw new NotFoundError({ message: 'Bus company not found' })
         }
 
-        const existed = company.branches.find(b => b.name === branch.name)
-        if (existed) {
-            throw new BadRequestError({ message: 'Branch already exists' })
+        const existingNames = new Set(company.branches.map(b => b.name))
+        const newBranchNames = new Set()
+
+        for (const branch of branches) {
+            if (existingNames.has(branch.name)) {
+                throw new BadRequestError({ message: `Branch "${branch.name}" already exists` })
+            }
+            if (newBranchNames.has(branch.name)) {
+                throw new BadRequestError({ message: `Duplicate branch name "${branch.name}" in request` })
+            }
+            newBranchNames.add(branch.name)
         }
 
-        const updatedBranches = [
-            ...(company.branches || []), 
-            branch
-        ]
+        const updatedCompany = await busCompanyRepo.addBranchesToCompany({
+            company_id,
+            branches
+        })
 
-        return await this.updateCompany({ 
+        logger.info('Bus company add branch done', { company_id, requestId })
+
+        return updatedCompany
+    }
+
+    deleteBranch = async ({ company_id, branch_id }, { requestId }) => {
+        logger.info('Bus company soft delete branch start', { company_id, branch_id, requestId })
+
+        const company = await busCompanyRepo.findById(company_id)
+        if (!company) {
+            throw new NotFoundError({ message: 'Bus company not found' })
+        }
+
+        const branch = company.branches.find(b => b._id.toString() === branch_id)
+        if (!branch) {
+            throw new NotFoundError({ message: 'Branch not found' })
+        }
+
+        if (branch.isDeleted) {
+            throw new BadRequestError({ message: 'Branch is already deleted' })
+        }
+
+        const updatedCompany = await busCompanyRepo.softDeleteBranch({ 
             company_id, 
-            payload: { branches: updatedBranches } 
-        }, { requestId })
+            branch_id 
+        })
+
+        if (!updatedCompany) {
+            throw new BadRequestError({ message: 'Failed to delete branch' })
+        }
+
+        logger.info('Bus company soft delete branch done', { company_id, branch_id, requestId })
+
+        return updatedCompany
+    }
+
+    updateBranch = async ({ company_id, branch_id, update_data }, { requestId }) => {
+        logger.info('Bus company update branch start', { company_id, branch_id, requestId })
+
+        const company = await busCompanyRepo.findById(company_id)
+        if (!company) {
+            throw new NotFoundError({ message: 'Bus company not found' })
+        }
+
+        const branch = company.branches.find(b => b._id.toString() === branch_id)
+        if (!branch) {
+            throw new NotFoundError({ message: 'Branch not found' })
+        }
+
+        if (branch.isDeleted) {
+            throw new BadRequestError({ message: 'Cannot update a deleted branch' })
+        }
+
+        if (update_data.name) {
+            const nameExists = company.branches.some(b => 
+                !b.isDeleted && 
+                b.name === update_data.name && 
+                b._id.toString() !== branch_id
+            )
+            if (nameExists) {
+                throw new BadRequestError({ message: 'Branch name already exists' })
+            }
+        }
+        
+        const updatedCompany = await busCompanyRepo.updateBranch({
+            company_id,
+            branch_id,
+            update_data
+        })
+
+        logger.info('Update branch result', { company_id, branch_id, result: updatedCompany, requestId })
+
+        if (!updatedCompany) {
+            throw new BadRequestError({ message: 'Failed to update branch' })
+        }
+
+        logger.info('Bus company update branch done', { company_id, branch_id, requestId })
+        return updatedCompany
     }
 
     subscribePlan = async ({ company_id, plan_name }, { requestId }) => {
         logger.info('Bus company subscribe start', { company_id, plan_name, requestId })
+
+        const company = await busCompanyRepo.findById(company_id)
+        if (!company) {
+            throw new NotFoundError({ message: 'Bus company not found' })
+        }
 
         const normalizedPlanName = plan_name.trim().toLowerCase()
 
@@ -73,21 +164,23 @@ class BusCompanyService {
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + plan.duration_days)
 
-        const updateData = {
-            subscription: {
-                plan_name: normalizedPlanName,
-                expires_at: expiresAt,
-                quotas: {
-                    ...plan.quotas,
-                    current_month_usage: 0 
-                }
+        const subscriptionData = {
+            plan_name: normalizedPlanName,
+            expires_at: expiresAt,
+            quotas: {
+                ...plan.quotas,
+                current_month_usage: 0 
             }
         }
 
-        return await this.updateCompany({ 
-            company_id, 
-            payload: updateData 
-        }, { requestId })
+        const updatedCompany = await busCompanyRepo.updateSubscription({
+            company_id,
+            subscription: subscriptionData
+        })
+
+        logger.info('Bus company subscribe done', { company_id, requestId })
+
+        return updatedCompany
     }
 
     updateCompany = async ({ company_id, payload }, { requestId }) => {
@@ -104,9 +197,7 @@ class BusCompanyService {
         const updateData = {
             ...(payload.brand_name !== undefined && { brand_name: payload.brand_name }),
             ...(payload.legal_entity !== undefined && { legal_entity: payload.legal_entity }),
-            ...(payload.branches !== undefined && { branches: payload.branches }),
-            ...(payload.subscription !== undefined && { subscription: payload.subscription }),
-        };
+        }
 
         const updatedCompany = await busCompanyRepo.updateBusCompany({
             companyId: company_id,
@@ -176,6 +267,38 @@ class BusCompanyService {
             used: updatedUsage,
             remaining: limit - updatedUsage,
             expires_at: quota.expires_at
+        }
+    }
+
+    getById = async ({ company_id }, { requestId }) => {
+        logger.info('Bus company get by ID start', { company_id, requestId })
+
+        const company = await busCompanyRepo.findById(company_id)
+        if (!company) {
+            throw new NotFoundError({ message: 'Bus company not found' })
+        }
+
+        logger.info('Bus company found', { company_id, requestId })
+
+        return company
+    }
+
+    getList = async ({ skip = 0, limit = 10 }, { requestId }) => {
+        logger.info('Bus company get list start', { skip, limit, requestId })
+
+        const companies = await busCompanyRepo.findAll({ skip, limit })
+        const total = await busCompanyRepo.countTotal()
+
+        logger.info('Bus company list retrieved', { count: companies.length, total, requestId })
+
+        return {
+            data: companies,
+            pagination: {
+                total,
+                skip,
+                limit,
+                page: Math.floor(skip / limit) + 1
+            }
         }
     }
 }

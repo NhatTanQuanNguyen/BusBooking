@@ -18,6 +18,10 @@ const busCompanySchema = new mongoose.Schema({
     branches: [{
         name: String,
         address: String,
+        isDeleted: {
+            type: Boolean,
+            default: false
+        }
     }],
     subscription: {
         plan_name: String, 

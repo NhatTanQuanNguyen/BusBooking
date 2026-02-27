@@ -30,6 +30,7 @@ router.use(
 // ===== Feature routes =====
 
 router.use('/bus-company', require('./bus-company/index'))
+router.use('/subscription-plan', require('./subscription-plan/index'))
 router.use('/apikey', require('./api-key/index'))
 router.use('/route', require('./route/index'))
 router.use('/location', require('./location/index'))
